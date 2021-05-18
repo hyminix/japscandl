@@ -11,4 +11,3 @@ jobs:
       - run: npm ci
       - run: npm run downloadtest
       - run: npm test
-      - run: npm run build
