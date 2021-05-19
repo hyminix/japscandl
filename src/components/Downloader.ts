@@ -22,15 +22,19 @@ class Downloader extends Fetcher {
      * and chrome path
      * @param options Can take definitions of onEvent callbacks, default are empty callbacks
      */
-    constructor(browser: Browser, flags: ComponentFlags, options?: {
-        onPage?: DownloaderOnPage,
-        onChapter?: DownloaderOnChapter
-        onVolume?: DownloaderOnVolume;
+    constructor(browser: Browser, options?: {
+        onEvent?: {
+            onPage?: DownloaderOnPage,
+            onChapter?: DownloaderOnChapter
+            onVolume?: DownloaderOnVolume;
+        },
+        flags?: ComponentFlags,
+        outputDirectory?: string,
     }) {
-        super(browser, flags);
+        super(browser, options);
         // managing options
-        if (options) {
-            for (const option of Object.entries(options)) {
+        if (options && options.onEvent) {
+            for (const option of Object.entries(options.onEvent)) {
                 if (option[0] in this) {
                     // @ts-ignore
                     this[option[0]] = option[1];
@@ -40,7 +44,7 @@ class Downloader extends Fetcher {
             }
         }
         // flags
-        if (flags.fast) {
+        if (options?.flags?.fast) {
             console.log(
                 "Attention! Le flag 'fast' est activé. Le programme ne garantit plus de récupérer toutes les images des chapitres. Une bonne connexion et un bon ordinateur est très fortement recommandé pour l'utilisation de ce flag. Dans le cas contraire, des images pourraient manquer."
             );
@@ -78,6 +82,8 @@ class Downloader extends Fetcher {
 
         const canvasElement = await page.$(popupCanvasSelector);
         let dimensions = await canvasElement?.evaluate((el) => {
+            // remove everything from page except canvas
+            document.querySelectorAll("div").forEach((el) => el.remove());
             const width = el.getAttribute("width");
             const height = el.getAttribute("height");
             if (width !== null && height !== null) {
@@ -99,10 +105,6 @@ class Downloader extends Fetcher {
         }
         await page.setViewport(dimensions);
 
-        // remove everything from page except canvas
-        await page.evaluate(() => {
-            document.querySelectorAll("div").forEach((el) => el.remove());
-        });
         this.verbosePrint(console.log, "Téléchargement de l'image...");
         await canvasElement
             ?.screenshot({
@@ -329,31 +331,6 @@ class Downloader extends Fetcher {
     async destroy(): Promise<void> {
         this.verbosePrint(console.log, "Destruction du downloader");
         if (this.browser) await this.browser.close();
-    }
-
-    /**
-     * NOT YET IMPLEMENTED
-     * @param link to download from
-     */
-    async downloadWebtoon(link: string): Promise<void> {
-        const page = await this.createExistingPage(link);
-        await page.waitForTimeout(5000);
-        const image = await page.$("#image");
-        if (image === null) return;
-        const a = await image.$$("a > div");
-        if (a === null) return;
-        a.forEach((pel) => pel.evaluate((el) => document.body.appendChild(el)));
-        page.evaluate(() => {
-            document
-                .querySelectorAll("body > div.container")
-                .forEach((el) => el.remove());
-        });
-        for (const el of a) {
-            const id = await el.evaluate((el) => el.id);
-            el.screenshot({
-                path: path.join(process.cwd(), "manga", "solo-leveling-" + id + ".jpg"),
-            });
-        }
     }
 }
 

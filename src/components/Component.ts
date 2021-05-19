@@ -3,6 +3,9 @@ import path from "path";
 import { ComponentFlags, MangaAttributes } from "../utils/types";
 import url from "../utils/url";
 
+/**
+ * Contains flags and variables needed for Fetcher and Downloader
+ */
 class Component {
     WEBSITE = "https://www.japscan.ws";
     verbose: boolean;
@@ -11,12 +14,26 @@ class Component {
     timeout: number;
     outputDirectory: string;
 
-    constructor(browser: Browser, flags: ComponentFlags, outputDirectory = "manga") {
-        this.outputDirectory = outputDirectory;
-        this.verbose = flags.verbose;
-        this.fast = flags.fast;
-        this.timeout = flags.timeout * 1000;
+    /**
+     * @param browser puppeteer browser the component is going to use
+     * @param flags flags used by component
+     * @param outputDirectory where the manga will be downloaded
+     */
+     constructor(browser: Browser, options?: {
+        flags?: ComponentFlags,
+        outputDirectory?: string
+    }) {
+        this.outputDirectory = (options?.outputDirectory) ? options.outputDirectory : "manga";
         this.browser = browser;
+        if (options?.flags) {
+            this.verbose = options.flags.verbose;
+            this.fast = options.flags.fast;
+            this.timeout = options.flags.timeout * 1000;
+        } else {
+            this.verbose = false;
+            this.fast = false;
+            this.timeout = 60 * 1000;
+        }
     }
 
     /** if page exists, go to it, else throw error
@@ -30,6 +47,12 @@ class Component {
         return page;
     }
 
+    /**
+     * 
+     * @param page page that will go to link
+     * @param link link to go to
+     * @param script defaults to false, when true injects script in page that pops out image from shadowroot
+     */
     protected async goToExistingPage(page: Page, link: string, script = false): Promise<void> {
         if (script) {
             await page.evaluateOnNewDocument((await import(path.join(__dirname, "../inject/inject.js"))).default);

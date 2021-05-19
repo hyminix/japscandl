@@ -1,5 +1,3 @@
-import CLInterface from "../components/CLIInterface";
-
 export interface MangaAttributes {
     manga: string;
     chapter: string;
@@ -10,15 +8,6 @@ export interface MangaInfos {
     volumes: number;
     chapters: number;
     name: string;
-}
-
-export interface CLICommand {
-    description: string;
-    usage: string;
-    aliases: string[];
-    example: string[];
-    argsNeeded: number;
-    execute(inter: CLInterface, args: string[]): Promise<void>;
 }
 
 export type DownloaderOnPage =

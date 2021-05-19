@@ -4,8 +4,11 @@ import { ComponentFlags, MangaInfos } from "../utils/types";
 import url from "../utils/url";
 
 class Fetcher extends Component {
-    constructor(browser: Browser, flags: ComponentFlags, outputDirectory = "manga"){
-        super(browser, flags, outputDirectory);
+    constructor(browser: Browser, options?: {
+        flags?: ComponentFlags,
+        outputDirectory?: string
+    }) {
+        super(browser, options);
     }
     /**
      *

@@ -1,15 +1,14 @@
 import Fetcher from "../src/components/Fetcher";
 import getBrowser from "../src/utils/browser";
 import config from "../src/utils/config";
-import flags from "../src/utils/flags";
+import url from "../src/utils/url";
 let fetcher: Fetcher;
 describe("Instantiate Fetcher", function () {
     it("Browser instantiation", async function () {
         this.timeout(0);
         const configVariables = config.getConfigVariables();
         const browser = await getBrowser(false, configVariables.chromePath);
-        const f = flags.getFlags();
-        fetcher = new Fetcher(browser, f);
+        fetcher = new Fetcher(browser);
     });
 })
 describe("Fetch manga stats tests", function () {
@@ -66,7 +65,7 @@ describe("Fetch manga stats tests", function () {
             });
         });
     });
-    it("Fetchs one-piece chapter ${chapterToDownload} pages", function () {
+    it(`Fetchs one-piece chapter 1000 pages`, function () {
         const supposedResult = 15;
         return new Promise((resolve, reject) => {
             fetcher
@@ -87,6 +86,10 @@ describe("Fetch manga stats tests", function () {
         });
     });
     it("Fetchs range between one-piece 1000 and 1005", function () {
+        function getListOrNone(arr: string[]){
+            if(arr.length) return arr.join(' | ');
+            return "none";
+        }
         const supposedLinks = [
             fetcher.WEBSITE + "/lecture-en-ligne/one-piece/1000/",
             fetcher.WEBSITE + "/lecture-en-ligne/one-piece/1000.5/",
@@ -96,19 +99,14 @@ describe("Fetch manga stats tests", function () {
             fetcher.WEBSITE + "/lecture-en-ligne/one-piece/1004/",
             fetcher.WEBSITE + "/lecture-en-ligne/one-piece/1005/",
         ];
-        const supposedLinksToString = supposedLinks.toString();
         return new Promise((resolve, reject) => {
             fetcher
                 .fetchChapterLinksBetweenRange("one-piece", 1000, 1005)
                 .then((links) => {
-                    const linksToString = links.toString();
-                    if (linksToString !== supposedLinksToString) {
-                        reject(
-                            "Wrong fetch. Supposed: " +
-                            supposedLinksToString +
-                            "\nGot: " +
-                            linksToString
-                        );
+                    if (links.toString() !== supposedLinks.toString()) {
+                        const couldNotBeFetched = supposedLinks.filter(x => !links.includes(x))
+                        const fetchedButShouldnt = links.filter(x => !supposedLinks.includes(x));
+                        reject(new Error(`Were not fetched: ${getListOrNone(couldNotBeFetched)}\nWere fetched but shouldnt: ${getListOrNone(fetchedButShouldnt)}`));
                     } else {
                         resolve(undefined);
                     }

@@ -3,7 +3,6 @@ import path from "path";
 import sizeOf from "image-size";
 import getBrowser from "../src/utils/browser";
 import config from "../src/utils/config";
-import flags from "../src/utils/flags";
 import Downloader from "../src/components/Downloader";
 
 let downloader: Downloader;
@@ -17,11 +16,12 @@ describe("Downloader tests", function () {
         this.timeout(0);
         const configVariables = config.getConfigVariables();
         const browser = await getBrowser(false, configVariables.chromePath);
-        const f = flags.getFlags();
-        downloader = new Downloader(browser, f, {
-            onPage: (attributes, currentPage, totalPages) => {
-                const { manga, chapter } = attributes;
-                console.log(`${manga} ${chapter} ${currentPage}/${totalPages}`);
+        downloader = new Downloader(browser, {
+            onEvent: {
+                onPage: (attributes, currentPage, totalPages) => {
+                    const { manga, chapter } = attributes;
+                    console.log(`\t${manga} ${chapter} ${currentPage}/${totalPages}`);
+                }
             }
         });
     });
@@ -29,11 +29,11 @@ describe("Downloader tests", function () {
         this.afterEach("number of open chrome pages must be all about:blank", async function () {
             return new Promise(function (resolve, reject) {
                 downloader.browser.pages().then((pages) => {
-                    const pagesUrl: string[] = [];
-                    pages.forEach((page) => pagesUrl.push(page.url()));
-                    const pagesThatAreNotBlank = pagesUrl.filter(
-                        (url) => url !== "about:blank"
-                    );
+                    const pagesThatAreNotBlank: string[] = Array
+                        // create array of urls
+                        .from(pages, page => page.url())
+                        // keep only pages different from about:blank
+                        .filter((url) => url !== "about:blank");
                     if (pagesThatAreNotBlank.length) {
                         reject("Some pages are not closed:" + pagesThatAreNotBlank.join('\n'));
                     } else {
@@ -66,8 +66,8 @@ describe("Downloader tests", function () {
         it(`downloaded One Piece must have ${numberOfPages} pages`, function () {
             const downloadedAt = path.join(
                 downloader.outputDirectory,
-                "one-piece",
-                "998"
+                mangaToDownload,
+                chapterToDownload.toString()
             );
             const numberOfImages = fs.readdirSync(downloadedAt).length;
             if (numberOfImages !== numberOfPages) {
@@ -82,22 +82,27 @@ describe("Downloader tests", function () {
                 throw new Error("cbr was not created at " + cbrName);
             }
         });
-        const pageToCheck = 4;
-        it(`Page ${pageToCheck} must have correct size`, function () {
+        it("cbr must not be 0 bytes", function () {
+            const cbrName = downloader.getCbrFrom(mangaToDownload, chapterToDownload.toString(), "chapitre");
+            const stats = fs.statSync(cbrName);
+            if (stats.size === 0) {
+                throw new Error("Cbr has size of 0 bytes");
+            }
+        });
+        const pageToCheck = { number: 4, height: 1300, width: 1790 };
+        it(`Page ${pageToCheck.number} must have correct size`, function () {
             const { height, width } = sizeOf(
-                path.join(__dirname, `../../manga/one-piece/${chapterToDownload}/${chapterToDownload}_${pageToCheck}.jpg`)
+                path.join(__dirname, `../../manga/one-piece/${chapterToDownload}/${chapterToDownload}_${pageToCheck.number}.jpg`)
             );
-            const supposedHeight = 1300;
-            const supposedWidth = 1790;
             const errors: string[] = [];
-            if (height !== supposedHeight) {
+            if (height !== pageToCheck.height) {
                 errors.push(
-                    `height is wrong, current: ${height}, supposed: ${supposedHeight}`
+                    `height is wrong, current: ${height}, supposed: ${pageToCheck.height}`
                 );
             }
-            if (width !== supposedWidth) {
+            if (width !== pageToCheck.width) {
                 errors.push(
-                    `width is wrong, current: ${width}, supposed: ${supposedWidth}`
+                    `width is wrong, current: ${width}, supposed: ${pageToCheck.width}`
                 );
             }
             if (errors.length) {

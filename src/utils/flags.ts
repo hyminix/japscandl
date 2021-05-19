@@ -2,7 +2,7 @@ import yargs from "yargs";
 import { ComponentFlags } from "./types";
 
 const flags = {
-    getFlags(): ComponentFlags {
+    getDownloaderFlags(): ComponentFlags {
         const flags = yargs(process.argv.slice(2))
             .option("verbose", { alias: "v", boolean: true, default: false })
             .option("headless", { alias: "h", boolean: true, default: false })
