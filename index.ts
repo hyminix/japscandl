@@ -7,6 +7,7 @@ import manga from "./src/utils/manga"
 import mangaFormat from "./src/utils/mangaFormat"
 import url from "./src/utils/url"
 import zipper from "./src/utils/zipper"
+import * as types from "./src/utils/types";
 
 const utils = {
     browser,
@@ -24,7 +25,8 @@ import getBrowser from "./src/utils/browser";
 
 const japscandl = {
     getBrowser,
-    utils
+    utils,
+    types
 }
 export default japscandl;
 
