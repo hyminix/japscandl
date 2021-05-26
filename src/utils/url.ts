@@ -1,11 +1,6 @@
-import path from "path";
 import { MangaAttributes } from "./types";
 
 const url = {
-    joinJapscanURL(...args: string[]): string {
-        const website = args.shift();
-        return website + "/" + path.posix.join(...args, "/");
-    },
     /**
      * @param link link to evaluate
      * @returns manga attributes found from link

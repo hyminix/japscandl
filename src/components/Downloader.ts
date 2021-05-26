@@ -140,12 +140,7 @@ class Downloader extends Fetcher {
             );
         }
         mangaName = mangaNameStats;
-        const link = url.joinJapscanURL(
-            this.WEBSITE,
-            "lecture-en-ligne",
-            mangaName,
-            chapter.toString()
-        );
+        const link = this.WEBSITE + "/lecture-en-ligne/" + mangaName + "/" + chapter + "/";
         return this.downloadChapterFromLink(link, compression);
     }
 
