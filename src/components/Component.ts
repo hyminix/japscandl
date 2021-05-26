@@ -19,21 +19,15 @@ class Component {
      * @param flags flags used by component
      * @param outputDirectory where the manga will be downloaded
      */
-     constructor(browser: Browser, options?: {
+    constructor(browser: Browser, options?: {
         flags?: ComponentFlags,
         outputDirectory?: string
     }) {
         this.outputDirectory = (options?.outputDirectory) ? options.outputDirectory : "manga";
         this.browser = browser;
-        if (options?.flags) {
-            this.verbose = options.flags.verbose;
-            this.fast = options.flags.fast;
-            this.timeout = options.flags.timeout * 1000;
-        } else {
-            this.verbose = false;
-            this.fast = false;
-            this.timeout = 60 * 1000;
-        }
+        this.verbose = (options?.flags?.verbose !== undefined) ? options?.flags?.verbose : false;
+        this.fast = (options?.flags?.fast !== undefined) ? options?.flags?.fast : false;
+        this.timeout = (options?.flags?.timeout !== undefined) ? options?.flags?.timeout : 60 * 1000;
     }
 
     /** if page exists, go to it, else throw error
