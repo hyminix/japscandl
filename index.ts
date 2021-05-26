@@ -1,7 +1,6 @@
 import browser from "./src/utils/browser"
 import chrome from "./src/utils/chrome"
 import config from "./src/utils/config"
-import flags from "./src/utils/flags"
 import fsplus from "./src/utils/fsplus"
 import manga from "./src/utils/manga"
 import mangaFormat from "./src/utils/mangaFormat"
@@ -13,7 +12,6 @@ const utils = {
     browser,
     chrome,
     config,
-    flags,
     fsplus,
     manga,
     mangaFormat,
