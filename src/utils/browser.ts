@@ -14,7 +14,6 @@ const getBrowser = async (visible: boolean, chromePath: string): Promise<Browser
                 headless: !visible,
                 executablePath: chromePath,
             });
-        await browser.newPage();
         return browser;
     } catch (e) {
         if (e.toString().includes("FetchError")) {
