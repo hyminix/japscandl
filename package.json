@@ -1,6 +1,6 @@
 {
   "name": "japscandl",
-  "version": "1.0.12",
+  "version": "1.0.13",
   "description": "",
   "main": "js/index.js",
   "repository": {
@@ -15,7 +15,7 @@
     "download": "npm run tsc && node js/src/utils/chromiumDownloader.js",
     "downloadtest": "npm run tsc && node js/src/utils/chromiumDownloader.js --testing",
     "tester": "npm run tsc && node js/src/tester.js",
-    "pub": "npm run tsc && npm publish"
+    "pub": "npm run tsc && git push && npm publish"
   },
   "pkg": {
     "targets": [

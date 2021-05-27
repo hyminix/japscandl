@@ -1,4 +1,4 @@
-function inject() {
+function inject(): void {
     /* eslint-disable @typescript-eslint/ban-ts-comment */
     //@ts-ignore
     Element.prototype.__attachShadow = Element.prototype.attachShadow;

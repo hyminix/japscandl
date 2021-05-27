@@ -252,10 +252,11 @@ class Downloader extends Fetcher {
             throw new Error("Le début ne peut pas être plus grand que la fin");
         }
         const volumeDownloadLocations: Array<Array<string>> = [];
+        const total = end-start+1;
         for (let i = start; i <= end; i++) {
             const downloadLocations = await this.downloadVolume(mangaName, i, compression);
             volumeDownloadLocations.push(downloadLocations);
-            this.onVolume(mangaName, i, end - start);
+            this.onVolume(mangaName, i, total);
         }
         return volumeDownloadLocations;
     }
