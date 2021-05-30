@@ -20,13 +20,14 @@ class Downloader extends Fetcher {
     /**
      * Instantiates a browser and reads config file to get output directory
      * and chrome path
-     * @param options Can take definitions of onEvent callbacks, default are empty callbacks
+     * @param options Can take definitions of onEvent callbacks in onEvent property, default are empty callbacks.
+     * @param browser Browser the downloader is going to use
      */
     constructor(browser: Browser, options?: {
         onEvent?: {
             onPage?: DownloaderOnPage,
-            onChapter?: DownloaderOnChapter
-            onVolume?: DownloaderOnVolume;
+            onChapter?: DownloaderOnChapter,
+            onVolume?: DownloaderOnVolume,
         },
         flags?: ComponentFlags,
         outputDirectory?: string,
@@ -256,7 +257,7 @@ class Downloader extends Fetcher {
         for (let i = start; i <= end; i++) {
             const downloadLocations = await this.downloadVolume(mangaName, i, compression);
             volumeDownloadLocations.push(downloadLocations);
-            this.onVolume(mangaName, i, total);
+            this.onVolume(mangaName, i-start+1, total);
         }
         return volumeDownloadLocations;
     }

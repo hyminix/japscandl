@@ -4,6 +4,10 @@ import { ComponentFlags, MangaInfos } from "../utils/types";
 import url from "../utils/url";
 
 class Fetcher extends Component {
+    /**
+     * @param browser Browser the downloader is going to use
+     * @param options optional options, which are flags and outputDirectory
+     */
     constructor(browser: Browser, options?: {
         flags?: ComponentFlags,
         outputDirectory?: string
@@ -13,7 +17,6 @@ class Fetcher extends Component {
     /**
      *
      * @param mangaName manga name
-     * @param _page page you already have opened to prevent waiting for page initialisation
      * @returns manga stats
      */
     async fetchStats(

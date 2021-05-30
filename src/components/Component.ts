@@ -16,8 +16,7 @@ class Component {
 
     /**
      * @param browser puppeteer browser the component is going to use
-     * @param flags flags used by component
-     * @param outputDirectory where the manga will be downloaded
+     * @param options optional options, contains flags and outputDirectory
      */
     constructor(browser: Browser, options?: {
         flags?: ComponentFlags,
@@ -32,6 +31,7 @@ class Component {
 
     /** if page exists, go to it, else throw error
      * @param link link to go to
+     * @param script optional, defaults to false. If true then injects script to pop out protected canvas, else doesn't do anything.
      * @returns a valid japscan page
      */
     async createExistingPage(link: string, script = false): Promise<Page> {
@@ -49,6 +49,7 @@ class Component {
      */
     protected async goToExistingPage(page: Page, link: string, script = false): Promise<void> {
         if (script) {
+            this.verbosePrint(console.log, "Injecting script");
             await page.evaluateOnNewDocument((await import(path.join(__dirname, "../inject/inject.js"))).default);
         }
         await this.safePageGoto(page, link);

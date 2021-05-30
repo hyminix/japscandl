@@ -20,7 +20,7 @@ export type DownloaderOnChapter = (attributes: MangaAttributes, currentChapter: 
 export type DownloaderOnVolume = (mangaName: string, current: number, total: number) => void;
 
 export type ComponentFlags = {
-    verbose: boolean;
-    fast: boolean;
-    timeout: number;
+    verbose?: boolean;
+    fast?: boolean;
+    timeout?: number;
 }
