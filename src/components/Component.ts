@@ -22,11 +22,11 @@ class Component {
         flags?: ComponentFlags,
         outputDirectory?: string
     }) {
-        this.outputDirectory = (options?.outputDirectory) ? options.outputDirectory : "manga";
         this.browser = browser;
-        this.verbose = (options?.flags?.verbose !== undefined) ? options?.flags?.verbose : false;
-        this.fast = (options?.flags?.fast !== undefined) ? options?.flags?.fast : false;
-        this.timeout = (options?.flags?.timeout !== undefined) ? options?.flags?.timeout : 60 * 1000;
+        this.outputDirectory = options?.outputDirectory ?? "manga";
+        this.verbose = options?.flags?.verbose ?? false;
+        this.fast = options?.flags?.fast ?? false;
+        this.timeout = options?.flags?.timeout ?? 60*1000;
     }
 
     /** if page exists, go to it, else throw error

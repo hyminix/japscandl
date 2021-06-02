@@ -34,7 +34,7 @@ class Downloader extends Fetcher {
     }) {
         super(browser, options);
         // managing options
-        if (options && options.onEvent) {
+        if (options?.onEvent) {
             for (const option of Object.entries(options.onEvent)) {
                 if (option[0] in this) {
                     // @ts-ignore
