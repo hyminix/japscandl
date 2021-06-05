@@ -1,8 +1,14 @@
 import Downloader from "./components/Downloader";
 
-Downloader.launch().then((downloader) => {
+Downloader.launch({
+    flags: {
+        communicate: false,
+        fast: false,
+        headless: false,
+        timeout: 60,
+        verbose: false,
+    }
+}).then((downloader) => {
     downloader
-        .isAWebtoon("solo-leveling")
-        .then(res => console.log(res))
-        .then(() => downloader.destroy());
+        .fetchStats("one-piece").then((stats) => console.log(stats));
 });
