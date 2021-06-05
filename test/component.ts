@@ -46,7 +46,7 @@ describe("is a webtoon tests", function () {
             })
         })
     })
-    describe("Should return true because manga is a webtoon", function () {
+    describe("Is webtoon tests", function () {
         ["tower-of-god", "solo-leveling", "gosu", "the-gamer"].forEach((manga) => {
             it(`Should return true because ${manga} is a webtoon`, function () {
                 return new Promise((resolve, reject) => {
