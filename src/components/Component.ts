@@ -28,7 +28,7 @@ class Component {
         this.outputDirectory = options?.outputDirectory ?? "manga";
         this.verbose = options?.flags?.verbose ?? false;
         this.fast = options?.flags?.fast ?? false;
-        this.timeout = options?.flags?.timeout ?? 60 * 1000;
+        this.timeout = (options?.flags?.timeout) ? options?.flags?.timeout * 1000 : 60 * 1000;
     }
 
     /** if page exists, go to it, else throw error
