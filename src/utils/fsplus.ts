@@ -23,12 +23,10 @@ const fsplus = {
         }
     },
     createPath(_path: string): void {
-        const split = _path.split("/");
-        let path = "";
-        split.forEach((folder: string) => {
-            if (folder === "") return;
-            path += folder + "/";
-            this.mkdirIfDoesntExist(path);
+        fs.mkdir(_path, {
+            recursive: true
+        }, (err) => {
+            if(err) throw err;
         });
     },
 };

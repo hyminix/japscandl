@@ -1,21 +1,25 @@
-import { Browser } from "puppeteer";
+import { Browser, ElementHandle } from "puppeteer";
 import path from "path";
 // utils
-import { ComponentFlags, DownloaderOnChapter, DownloaderOnPage, DownloaderOnVolume } from "../utils/types";
 import zipper from "../utils/zipper";
 import url from "../utils/url";
 import fsplus from "../utils/fsplus";
 import manga from "../utils/manga";
 import Fetcher from "./Fetcher";
+import getBrowser from "../utils/browser";
+import chrome from "../utils/chrome";
+import { ComponentFlags, MangaAttributes } from "../utils/types";
 
 
 /**
  * Japscan downloader class, usually used with an interface
  */
 class Downloader extends Fetcher {
-    onPage: DownloaderOnPage = () => { };
-    onChapter: DownloaderOnChapter = () => { };
-    onVolume: DownloaderOnVolume = () => { };
+    onPage: (attributes: MangaAttributes,
+        currentPage: number,
+        totalPages: number) => void = () => { };
+    onChapter: (attributes: MangaAttributes, currentChapter: number, totalChapters: number) => void = () => { };
+    onVolume: (mangaName: string, current: number, total: number) => void = () => { };
 
     /**
      * Instantiates a browser and reads config file to get output directory
@@ -25,9 +29,11 @@ class Downloader extends Fetcher {
      */
     constructor(browser: Browser, options?: {
         onEvent?: {
-            onPage?: DownloaderOnPage,
-            onChapter?: DownloaderOnChapter,
-            onVolume?: DownloaderOnVolume,
+            onPage?: (attributes: MangaAttributes,
+                currentPage: number,
+                totalPages: number) => void,
+            onChapter?: (attributes: MangaAttributes, currentChapter: number, totalChapters: number) => void,
+            onVolume?: (mangaName: string, current: number, total: number) => void,
         },
         flags?: ComponentFlags,
         outputDirectory?: string,
@@ -57,9 +63,22 @@ class Downloader extends Fetcher {
      * @returns if image could be downloaded
      */
     async downloadImageFromLink(link: string): Promise<boolean> {
-        this.verbosePrint(console.log, "Téléchargement de l'image depuis le lien " + link);
-        const page = await this.createExistingPage(link, true);
-
+        const waitAndGetCanvas = async (): Promise<ElementHandle<Element> | false> => {
+            const popupCanvasSelector = "body > canvas";
+            try {
+                this._verbosePrint(console.log, "Attente du script de page...");
+                await page.waitForSelector(popupCanvasSelector, {
+                    timeout: this.timeout,
+                });
+                this._verbosePrint(console.log, "Attente terminée");
+            } catch (e) {
+                console.log("La page" + link + "n'a pas l'air d'avoir d'images");
+                return false;
+            }
+            return await page.$(popupCanvasSelector) ?? false;
+        }
+        this._verbosePrint(console.log, "Téléchargement de l'image depuis le lien " + link);
+        const page = await this.createExistingPage(link, "normal");
         const attributes = url.getAttributesFromLink(link);
 
         let savePath = path.posix.join(
@@ -69,46 +88,22 @@ class Downloader extends Fetcher {
         );
         fsplus.createPath(savePath);
         savePath = path.posix.join(savePath, manga.getFilenameFrom(attributes));
-        const popupCanvasSelector = "body > canvas";
-        try {
-            this.verbosePrint(console.log, "Attente du script de page...");
-            await page.waitForSelector(popupCanvasSelector, {
-                timeout: this.timeout,
-            });
-            this.verbosePrint(console.log, "Attente terminée");
-        } catch (e) {
-            console.log("Cette page n'a pas l'air d'avoir d'images");
-            return false;
-        }
-
-        const canvasElement = await page.$(popupCanvasSelector);
-        let dimensions = await canvasElement?.evaluate((el) => {
+        const canvasElement = await waitAndGetCanvas();
+        if (!canvasElement) return false;
+        const dimensions = await canvasElement.evaluate((el) => {
             // remove everything from page except canvas
             document.querySelectorAll("div").forEach((el) => el.remove());
             const width = el.getAttribute("width");
             const height = el.getAttribute("height");
-            if (width !== null && height !== null) {
-                return {
-                    width: parseInt(width) * 2,
-                    height: parseInt(height) * 2,
-                };
-            }
             return {
-                width: 4096,
-                height: 2160,
-            };
+                width: (width) ? +width * 2 : 4096,
+                height: (height) ? +height * 2 : 2160,
+            }
         });
-        if (!dimensions) {
-            dimensions = {
-                width: 4096,
-                height: 2160,
-            };
-        }
         await page.setViewport(dimensions);
-
-        this.verbosePrint(console.log, "Téléchargement de l'image...");
+        this._verbosePrint(console.log, "Téléchargement de l'image...");
         await canvasElement
-            ?.screenshot({
+            .screenshot({
                 omitBackground: true,
                 path: savePath,
                 type: "jpeg",
@@ -126,7 +121,7 @@ class Downloader extends Fetcher {
      * @returns download location
      */
     async downloadChapter(mangaName: string, chapter: number, compression = true): Promise<string> {
-        this.verbosePrint(console.log,
+        this._verbosePrint(console.log,
             "Téléchargement du chapitre " + chapter + " de " + mangaName
         );
         const mangaNameStats = (await this.fetchStats(mangaName)).name;
@@ -158,7 +153,7 @@ class Downloader extends Fetcher {
         end: number,
         compression = true
     ): Promise<string[]> {
-        this.verbosePrint(console.log,
+        this._verbosePrint(console.log,
             "Téléchargement des chapitres de " +
             mangaName +
             " de " +
@@ -172,7 +167,7 @@ class Downloader extends Fetcher {
             start,
             end
         );
-        this.verbosePrint(console.log, "Liens à télécharger: ", linksToDownload);
+        this._verbosePrint(console.log, "Liens à télécharger: ", linksToDownload);
         let i = 1;
         for (const link of linksToDownload) {
             chapterDownloadLocations.push(await this.downloadChapterFromLink(link, compression));
@@ -190,10 +185,10 @@ class Downloader extends Fetcher {
         link: string,
         compression = false
     ): Promise<string> {
-        this.verbosePrint(console.log, "Téléchargement du chapitre depuis le lien " + link);
+        this._verbosePrint(console.log, "Téléchargement du chapitre depuis le lien " + link);
         const startAttributes = url.getAttributesFromLink(link);
         const numberOfPages = await this.fetchNumberOfPagesInChapter(link);
-        this.verbosePrint(console.log, "Pages dans le chapitre:", numberOfPages);
+        this._verbosePrint(console.log, "Pages dans le chapitre:", numberOfPages);
 
         const couldNotDownload: string[] = [];
         this.onPage(startAttributes, 0, numberOfPages);
@@ -228,38 +223,9 @@ class Downloader extends Fetcher {
         }
 
         if (compression) {
-            await zipper.safeZip(this, startAttributes.manga, "chapitre", startAttributes.chapter, [this.getPathFrom(startAttributes)]);
+            await zipper.safeZip(this, startAttributes.manga, "chapitre", startAttributes.chapter, [this._getPathFrom(startAttributes)]);
         }
-        return this.getPathFrom(startAttributes);
-    }
-
-    /**
-     * @param mangaName manga name
-     * @param start start chapter
-     * @param end end chapter
-     * @param compression default as false, tells if chapter is compressed as a cbr after downloading
-     * @returns array of download locations for each volume
-     */
-    async downloadVolumes(
-        mangaName: string,
-        start: number,
-        end: number,
-        compression = true
-    ): Promise<string[][]> {
-        this.verbosePrint(console.log,
-            "Téléchargement des volumes " + mangaName + " de " + start + " à " + end
-        );
-        if (start > end) {
-            throw new Error("Le début ne peut pas être plus grand que la fin");
-        }
-        const volumeDownloadLocations: Array<Array<string>> = [];
-        const total = end-start+1;
-        for (let i = start; i <= end; i++) {
-            const downloadLocations = await this.downloadVolume(mangaName, i, compression);
-            volumeDownloadLocations.push(downloadLocations);
-            this.onVolume(mangaName, i-start+1, total);
-        }
-        return volumeDownloadLocations;
+        return this._getPathFrom(startAttributes);
     }
 
     /**
@@ -289,14 +255,14 @@ class Downloader extends Fetcher {
             );
             mangaName = stats.name;
         }
-        this.verbosePrint(console.log, "Récupération des informations sur le volume...");
+        this._verbosePrint(console.log, "Récupération des informations sur le volume...");
 
         const toDownloadFrom = await this.fetchVolumeChapters(
             volumeNumber,
             mangaName
         );
 
-        this.verbosePrint(console.log, "Récupéré");
+        this._verbosePrint(console.log, "Récupéré");
         const waiters = [];
         const downloadLocations: Array<string> = [];
         let i = 1;
@@ -322,11 +288,77 @@ class Downloader extends Fetcher {
         return downloadLocations;
     }
 
+        /**
+     * @param mangaName manga name
+     * @param start start chapter
+     * @param end end chapter
+     * @param compression default as false, tells if chapter is compressed as a cbr after downloading
+     * @returns array of download locations for each volume
+     */
+         async downloadVolumes(
+            mangaName: string,
+            start: number,
+            end: number,
+            compression = true
+        ): Promise<string[][]> {
+            this._verbosePrint(console.log,
+                "Téléchargement des volumes " + mangaName + " de " + start + " à " + end
+            );
+            if (start > end) {
+                throw new Error("Le début ne peut pas être plus grand que la fin");
+            }
+            const volumeDownloadLocations: Array<Array<string>> = [];
+            const total = end - start + 1;
+            for (let i = start; i <= end; i++) {
+                const downloadLocations = await this.downloadVolume(mangaName, i, compression);
+                volumeDownloadLocations.push(downloadLocations);
+                this.onVolume(mangaName, i - start + 1, total);
+            }
+            return volumeDownloadLocations;
+        }
+
+    async downloadWebtoonFromLink(link: string): Promise<string> {
+        const page = await this.createExistingPage(link, "webtoon");
+
+        const attributes = url.getAttributesFromLink(link);
+        const imageElement = await page.$('#image');
+        imageElement?.evaluate((image) => {
+            const allA = image.querySelectorAll('a');
+            allA.forEach((aEl) => alert(aEl.shadowRoot));
+        })
+        const numberOfPages = await page.evaluate(() => {
+            const el = document.querySelector('div.card:nth-child(1) > div:nth-child(2) > div:nth-child(1) > p:nth-child(5)');
+            if (!el) {
+                return -1;
+            }
+            return el.textContent?.split(": ")[1];
+        })
+        console.log("Number of pages:", numberOfPages);
+
+        return this.outputDirectory;
+    }
+
+    static async launch(options?: {
+        chromePath?: string,
+        onEvent?: {
+            onPage?: (attributes: MangaAttributes,
+                currentPage: number,
+                totalPages: number) => void,
+            onChapter?: (attributes: MangaAttributes, currentChapter: number, totalChapters: number) => void,
+            onVolume?: (mangaName: string, current: number, total: number) => void,
+        },
+        flags?: ComponentFlags,
+        outputDirectory?: string,
+    }): Promise<Downloader> {
+        const browser = await getBrowser(options?.flags?.headless ?? false, chrome.getChromePath(options?.chromePath));
+        return new this(browser, options);
+    }
+
     /**
      * destroy browser, do not use downloader after this operation
      */
     async destroy(): Promise<void> {
-        this.verbosePrint(console.log, "Destruction du downloader");
+        this._verbosePrint(console.log, "Destruction du downloader");
         if (this.browser) await this.browser.close();
     }
 }

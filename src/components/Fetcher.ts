@@ -2,6 +2,8 @@ import { Browser } from "puppeteer";
 import Component from "./Component";
 import { ComponentFlags, MangaInfos } from "../utils/types";
 import url from "../utils/url";
+import getBrowser from "../utils/browser";
+import chrome from "../utils/chrome";
 
 class Fetcher extends Component {
     /**
@@ -22,7 +24,7 @@ class Fetcher extends Component {
     async fetchStats(
         mangaName: string
     ): Promise<MangaInfos> {
-        this.verbosePrint(console.log, "Récupération des infos du manga " + mangaName);
+        this._verbosePrint(console.log, "Récupération des infos du manga " + mangaName);
         const link = this.WEBSITE + "/manga/" + mangaName + "/";
         const page = await this.createExistingPage(link);
         const pageMangaName = url.getAttributesFromLink(page.url()).manga;
@@ -69,7 +71,7 @@ class Fetcher extends Component {
         volumeNumber: number,
         mangaName: string
     ): Promise<Array<string>> {
-        this.verbosePrint(console.log,
+        this._verbosePrint(console.log,
             "Récupération des chapitres du volume " +
             volumeNumber +
             " du manga " +
@@ -166,18 +168,18 @@ class Fetcher extends Component {
      * @returns number of pages in chapter
      */
     async fetchNumberOfPagesInChapter(link: string): Promise<number> {
-        this.verbosePrint(console.log,
+        this._verbosePrint(console.log,
             "Recupération du nombre de pages pour le chapitre " + link
         );
         const startPage = await this.createExistingPage(link);
         const chapterSelectSelector =
             "div.div-select:nth-child(2) > .ss-main > .ss-content > .ss-list";
         try {
-            this.verbosePrint(console.log, "Attente du script de page...");
+            this._verbosePrint(console.log, "Attente du script de page...");
             await startPage.waitForSelector(chapterSelectSelector, {
                 timeout: this.timeout,
             });
-            this.verbosePrint(console.log, "Attente terminée");
+            this._verbosePrint(console.log, "Attente terminée");
         } catch (e) {
             await startPage.close();
             return await this.fetchNumberOfPagesInChapter(link);
@@ -193,9 +195,18 @@ class Fetcher extends Component {
         const numberOfPages = await chapterSelect.evaluate(
             (el) => el.childElementCount
         );
-        this.verbosePrint(console.log, "Nombre de page(s): " + numberOfPages);
+        this._verbosePrint(console.log, "Nombre de page(s): " + numberOfPages);
         await startPage.close();
         return numberOfPages;
+    }
+
+    static async launch(options?: {
+        flags?: ComponentFlags,
+        outputDirectory?: string,
+        chromePath?: string,
+    }): Promise<Fetcher> {
+        const browser = await getBrowser(options?.flags?.headless ?? false, chrome.getChromePath(options?.chromePath));
+        return new this(browser, options);
     }
 }
 

@@ -1,14 +1,14 @@
 import Fetcher from "../src/components/Fetcher";
-import getBrowser from "../src/utils/browser";
+import chrome from "../src/utils/chrome";
 import config from "../src/utils/config";
-import url from "../src/utils/url";
+
 let fetcher: Fetcher;
+
 describe("Instantiate Fetcher", function () {
     it("Browser instantiation", async function () {
         this.timeout(0);
         const configVariables = config.getConfigVariables();
-        const browser = await getBrowser(false, configVariables.chromePath);
-        fetcher = new Fetcher(browser);
+        fetcher = await Fetcher.launch({chromePath: chrome.getChromePath(configVariables.chromePath)});
     });
 })
 describe("Fetch manga stats tests", function () {
@@ -124,24 +124,6 @@ describe("Fetch manga stats tests", function () {
                     )
                 )
                 .catch((error) => resolve(error));
-        });
-    });
-});
-describe("japscan 404 tests", function () {
-    it("Should throw because page is 404", function () {
-        return new Promise((resolve, reject) => {
-            fetcher
-                .createExistingPage(fetcher.WEBSITE + "/manga/one-piece")
-                .catch((error) => reject(error));
-            resolve(undefined);
-        });
-    });
-    it("Should not throw because page exists", function () {
-        return new Promise((resolve, reject) => {
-            fetcher
-                .createExistingPage(fetcher.WEBSITE + "/manga/one-piece/")
-                .catch((error) => reject(error));
-            resolve(undefined);
         });
     });
 });

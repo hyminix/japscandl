@@ -1,7 +1,6 @@
 import fs from "fs";
 import path from "path";
 import sizeOf from "image-size";
-import getBrowser from "../src/utils/browser";
 import config from "../src/utils/config";
 import Downloader from "../src/components/Downloader";
 
@@ -15,9 +14,8 @@ describe("Downloader tests", function () {
     it("Browser instantiation", async function () {
         this.timeout(0);
         const configVariables = config.getConfigVariables();
-        const browser = await getBrowser(false, configVariables.chromePath);
-        downloader = new Downloader(browser, {
-            onEvent: {
+        downloader = await Downloader.launch({
+            chromePath: configVariables.chromePath, onEvent: {
                 onPage: (attributes, currentPage, totalPages) => {
                     const { manga, chapter } = attributes;
                     console.log(`\t${manga} ${chapter} ${currentPage}/${totalPages}`);
@@ -77,13 +75,13 @@ describe("Downloader tests", function () {
             }
         });
         it("cbr must have been created", function () {
-            const cbrName = downloader.getCbrFrom(mangaToDownload, chapterToDownload.toString(), "chapitre");
+            const cbrName = downloader._getCbrFrom(mangaToDownload, chapterToDownload.toString(), "chapitre");
             if (!fs.existsSync(cbrName)) {
                 throw new Error("cbr was not created at " + cbrName);
             }
         });
         it("cbr must not be 0 bytes", function () {
-            const cbrName = downloader.getCbrFrom(mangaToDownload, chapterToDownload.toString(), "chapitre");
+            const cbrName = downloader._getCbrFrom(mangaToDownload, chapterToDownload.toString(), "chapitre");
             const stats = fs.statSync(cbrName);
             if (stats.size === 0) {
                 throw new Error("Cbr has size of 0 bytes");

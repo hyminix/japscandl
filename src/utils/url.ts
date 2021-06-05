@@ -1,6 +1,14 @@
+import Component from "../components/Component";
 import { MangaAttributes } from "./types";
+import path from "path";
 
 const url = {
+    buildMangaLink( mangaName: string, component: Component): string {
+        return component.WEBSITE + "/" + path.posix.join("manga", mangaName, "/");
+    },
+    buildLectureLink( mangaName: string, chapter: string, component: Component): string {
+        return component.WEBSITE + "/" + path.posix.join("lecture-en-ligne", mangaName, chapter, "/");
+    },
     /**
      * @param link link to evaluate
      * @returns manga attributes found from link

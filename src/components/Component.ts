@@ -1,7 +1,9 @@
-import { Browser, Page } from "puppeteer";
+import { Browser, Page, Response } from "puppeteer";
 import path from "path";
 import { ComponentFlags, MangaAttributes } from "../utils/types";
 import url from "../utils/url";
+import getBrowser from "../utils/browser";
+import chrome from "../utils/chrome";
 
 /**
  * Contains flags and variables needed for Fetcher and Downloader
@@ -26,7 +28,7 @@ class Component {
         this.outputDirectory = options?.outputDirectory ?? "manga";
         this.verbose = options?.flags?.verbose ?? false;
         this.fast = options?.flags?.fast ?? false;
-        this.timeout = options?.flags?.timeout ?? 60*1000;
+        this.timeout = options?.flags?.timeout ?? 60 * 1000;
     }
 
     /** if page exists, go to it, else throw error
@@ -34,36 +36,46 @@ class Component {
      * @param script optional, defaults to false. If true then injects script to pop out protected canvas, else doesn't do anything.
      * @returns a valid japscan page
      */
-    async createExistingPage(link: string, script = false): Promise<Page> {
+    async createExistingPage(link: string, script?: "normal" | "webtoon"): Promise<Page> {
         const page = await this.browser.newPage();
-        this.verbosePrint(console.log, "Création de la page " + link + ((script) ? " avec un script" : ""));
-        await this.goToExistingPage(page, link, script);
+        this._verbosePrint(console.log, "Création de la page " + link + ((script) ? " avec un script" : ""));
+        await this._goToExistingPage(page, link, script);
         return page;
+    }
+
+    async _injectScriptToPage(page: Page, script: "normal" | "webtoon"): Promise<void> {
+        let fileToInject = null;
+        if (script === "normal") {
+            this._verbosePrint(console.log, "Injecting normal script");
+            fileToInject = "inject.js";
+        } else if (script === "webtoon") {
+            fileToInject = "injectWebtoon.js";
+        } else {
+            throw new Error("Invalid script specifier (" + script + ")");
+        }
+        await page.evaluateOnNewDocument((await import(path.join(__dirname, "../inject/" + fileToInject))).default);
     }
 
     /**
      * 
      * @param page page that will go to link
      * @param link link to go to
-     * @param script defaults to false, when true injects script in page that pops out image from shadowroot
+     * @param script optional, can be either normal or webtoon depending on which script you want to inject
      */
-    protected async goToExistingPage(page: Page, link: string, script = false): Promise<void> {
-        if (script) {
-            this.verbosePrint(console.log, "Injecting script");
-            await page.evaluateOnNewDocument((await import(path.join(__dirname, "../inject/inject.js"))).default);
-        }
-        await this.safePageGoto(page, link);
-        if (await this.isJapscan404(page)) {
+    async _goToExistingPage(page: Page, link: string, script?: "normal" | "webtoon"): Promise<void> {
+        if (script) await this._injectScriptToPage(page, script);
+        const response = await this._safePageGoto(page, link);
+        if (await this._isJapscan404(response)) {
             throw new Error("La page " + link + " n'existe pas (404)");
         }
-        this.verbosePrint(console.log, "Création de la page " + link);
+        this._verbosePrint(console.log, "Création de la page " + link);
     }
 
-    protected async safePageGoto(page: Page, link: string): Promise<void> {
+    async _safePageGoto(page: Page, link: string): Promise<Response | null> {
         try {
-            await page.goto(link, { timeout: this.timeout });
+            return await page.goto(link, { timeout: this.timeout });
         } catch (e) {
-            return this.safePageGoto(page, link);
+            return this._safePageGoto(page, link);
         }
     }
 
@@ -71,17 +83,24 @@ class Component {
      * @param page page to evaluate
      * @returns true if link it not a good link and false if the link is right
      */
-    async isJapscan404(page: Page): Promise<boolean> {
-        try {
+    async _isJapscan404(response: Response | null): Promise<boolean> {
+        return response?.headers().status === '404';
+    }
+
+    /**
+ * @param mangaName manga name
+ * @returns true if link is a webtoon and false if the link is not a webtoon
+ */
+    async isAWebtoon(mangaName: string): Promise<boolean> {
+        const link = this.WEBSITE + "/manga/" + mangaName + "/";
+        const page = await this.createExistingPage(link);
+        const res = await page.evaluate(() => {
             return (
-                (await page.$eval(
-                    "div.container:nth-child(2) > h1:nth-child(1)",
-                    (element: Element) => element.innerHTML
-                )) === "Oops!"
+                document.querySelector(".text-danger")?.textContent?.trim() ===
+                "Webtoon"
             );
-        } catch (e) {
-            return false;
-        }
+        });
+        return res;
     }
 
     /**
@@ -89,11 +108,11 @@ class Component {
      * @param param can be a link or manga attributes
      * @returns path to manga without filename
      */
-    getPathFrom(
+    _getPathFrom(
         param: string | MangaAttributes
     ): string {
         if (typeof param === "string") {
-            return this.getPathFrom(url.getAttributesFromLink(param));
+            return this._getPathFrom(url.getAttributesFromLink(param));
         } else {
             return `${this.outputDirectory}/${param.manga}/${param.chapter}/`;
         }
@@ -106,7 +125,7 @@ class Component {
      * @param type usually 'volume' or 'chapitre'
      * @returns cbr path
      */
-    getCbrFrom(manga: string, number: string, type: string): string {
+    _getCbrFrom(manga: string, number: string, type: string): string {
         return path.resolve(`${this.outputDirectory}/${manga}/${manga}-${type}-${number}.cbr`);
     }
     /**
@@ -114,7 +133,7 @@ class Component {
      * @param printFunction function used to print msg param
      * @param msg msg param to print
      */
-    protected verbosePrint(printFunction: unknown, ...msg: unknown[]): void {
+    protected _verbosePrint(printFunction: unknown, ...msg: unknown[]): void {
         if (this.verbose) {
             if (printFunction instanceof Function) {
                 printFunction(...msg);
@@ -122,6 +141,15 @@ class Component {
                 throw new Error("verbosePrint used with nonFunction parameter");
             }
         }
+    }
+
+    static async launch(options?: {
+        flags?: ComponentFlags,
+        outputDirectory?: string,
+        chromePath?: string,
+    }): Promise<Component> {
+        const browser = await getBrowser(options?.flags?.headless ?? false, chrome.getChromePath(options?.chromePath));
+        return new this(browser, options);
     }
 }
 
