@@ -25,7 +25,7 @@ class Fetcher extends Component {
         mangaName: string
     ): Promise<MangaInfos> {
         this._verbosePrint(console.log, "Récupération des infos du manga " + mangaName);
-        const link = this.WEBSITE + "/manga/" + mangaName + "/";
+        const link = url.buildMangaLink(mangaName, this);
         const page = await this.createExistingPage(link);
         const pageMangaName = url.getAttributesFromLink(page.url()).manga;
         const chapterList = await page.$("#chapters_list");
@@ -77,7 +77,7 @@ class Fetcher extends Component {
             " du manga " +
             mangaName
         );
-        const link = this.WEBSITE + "/manga/" + mangaName + "/";
+        const link = url.buildMangaLink(mangaName, this);
 
         const page = await this.createExistingPage(link);
         const chapterList = await page.$("#chapters_list");
@@ -139,7 +139,7 @@ class Fetcher extends Component {
                 ")"
             );
         }
-        const link = this.WEBSITE + "/manga/" + mangaName + "/";
+        const link = url.buildMangaLink(mangaName, this);
         const page = await this.createExistingPage(link);
         const linksToChapters = await page.evaluate(() => {
             const allElements = <NodeListOf<HTMLAnchorElement>>(

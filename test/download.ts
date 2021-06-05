@@ -16,9 +16,9 @@ describe("Downloader tests", function () {
         const configVariables = config.getConfigVariables();
         downloader = await Downloader.launch({
             chromePath: configVariables.chromePath, onEvent: {
-                onPage: (attributes, currentPage, totalPages) => {
-                    const { manga, chapter } = attributes;
-                    console.log(`\t${manga} ${chapter} ${currentPage}/${totalPages}`);
+                onPage: (attributes, totalPages) => {
+                    const { manga, chapter, page } = attributes;
+                    console.log(`\t${manga} ${chapter} ${page}/${totalPages}`);
                 }
             }
         });

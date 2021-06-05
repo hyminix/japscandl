@@ -16,7 +16,6 @@ import { ComponentFlags, MangaAttributes } from "../utils/types";
  */
 class Downloader extends Fetcher {
     onPage: (attributes: MangaAttributes,
-        currentPage: number,
         totalPages: number) => void = () => { };
     onChapter: (attributes: MangaAttributes, currentChapter: number, totalChapters: number) => void = () => { };
     onVolume: (mangaName: string, current: number, total: number) => void = () => { };
@@ -30,7 +29,6 @@ class Downloader extends Fetcher {
     constructor(browser: Browser, options?: {
         onEvent?: {
             onPage?: (attributes: MangaAttributes,
-                currentPage: number,
                 totalPages: number) => void,
             onChapter?: (attributes: MangaAttributes, currentChapter: number, totalChapters: number) => void,
             onVolume?: (mangaName: string, current: number, total: number) => void,
@@ -136,7 +134,7 @@ class Downloader extends Fetcher {
             );
         }
         mangaName = mangaNameStats;
-        const link = this.WEBSITE + "/lecture-en-ligne/" + mangaName + "/" + chapter + "/";
+        const link = url.buildLectureLink(mangaName, chapter.toString(), this);
         return this.downloadChapterFromLink(link, compression);
     }
 
@@ -191,14 +189,14 @@ class Downloader extends Fetcher {
         this._verbosePrint(console.log, "Pages dans le chapitre:", numberOfPages);
 
         const couldNotDownload: string[] = [];
-        this.onPage(startAttributes, 0, numberOfPages);
+        this.onPage(startAttributes, numberOfPages);
         for (let i = 1; i <= numberOfPages; i++) {
             const pageLink = `${link}${i}.html`;
             const isDownloaded = await this.downloadImageFromLink(pageLink);
             if (!isDownloaded) {
                 couldNotDownload.push(pageLink);
             }
-            this.onPage(url.getAttributesFromLink(link), i, numberOfPages);
+            this.onPage(url.getAttributesFromLink(pageLink), numberOfPages);
 
         }
 
@@ -288,36 +286,37 @@ class Downloader extends Fetcher {
         return downloadLocations;
     }
 
-        /**
-     * @param mangaName manga name
-     * @param start start chapter
-     * @param end end chapter
-     * @param compression default as false, tells if chapter is compressed as a cbr after downloading
-     * @returns array of download locations for each volume
-     */
-         async downloadVolumes(
-            mangaName: string,
-            start: number,
-            end: number,
-            compression = true
-        ): Promise<string[][]> {
-            this._verbosePrint(console.log,
-                "Téléchargement des volumes " + mangaName + " de " + start + " à " + end
-            );
-            if (start > end) {
-                throw new Error("Le début ne peut pas être plus grand que la fin");
-            }
-            const volumeDownloadLocations: Array<Array<string>> = [];
-            const total = end - start + 1;
-            for (let i = start; i <= end; i++) {
-                const downloadLocations = await this.downloadVolume(mangaName, i, compression);
-                volumeDownloadLocations.push(downloadLocations);
-                this.onVolume(mangaName, i - start + 1, total);
-            }
-            return volumeDownloadLocations;
+    /**
+ * @param mangaName manga name
+ * @param start start chapter
+ * @param end end chapter
+ * @param compression default as false, tells if chapter is compressed as a cbr after downloading
+ * @returns array of download locations for each volume
+ */
+    async downloadVolumes(
+        mangaName: string,
+        start: number,
+        end: number,
+        compression = true
+    ): Promise<string[][]> {
+        this._verbosePrint(console.log,
+            "Téléchargement des volumes " + mangaName + " de " + start + " à " + end
+        );
+        if (start > end) {
+            throw new Error("Le début ne peut pas être plus grand que la fin");
         }
+        const volumeDownloadLocations: Array<Array<string>> = [];
+        const total = end - start + 1;
+        for (let i = start; i <= end; i++) {
+            const downloadLocations = await this.downloadVolume(mangaName, i, compression);
+            volumeDownloadLocations.push(downloadLocations);
+            this.onVolume(mangaName, i - start + 1, total);
+        }
+        return volumeDownloadLocations;
+    }
 
-    async downloadWebtoonFromLink(link: string): Promise<string> {
+    // unfinished, do not touch
+    async ___downloadWebtoonFromLink(link: string): Promise<string> {
         const page = await this.createExistingPage(link, "webtoon");
 
         const attributes = url.getAttributesFromLink(link);
@@ -342,7 +341,6 @@ class Downloader extends Fetcher {
         chromePath?: string,
         onEvent?: {
             onPage?: (attributes: MangaAttributes,
-                currentPage: number,
                 totalPages: number) => void,
             onChapter?: (attributes: MangaAttributes, currentChapter: number, totalChapters: number) => void,
             onVolume?: (mangaName: string, current: number, total: number) => void,
