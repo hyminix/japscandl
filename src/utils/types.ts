@@ -24,5 +24,4 @@ export type ComponentFlags = {
     fast?: boolean;
     timeout?: number;
     headless?: boolean;
-    communicate?: boolean;
 }
