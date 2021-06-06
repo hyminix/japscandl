@@ -2,7 +2,6 @@ import Downloader from "./components/Downloader";
 
 Downloader.launch({
     flags: {
-        communicate: false,
         fast: false,
         headless: false,
         timeout: 60,
