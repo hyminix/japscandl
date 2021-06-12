@@ -4,6 +4,13 @@ import { ComponentFlags, MangaAttributes } from "../utils/types";
 import url from "../utils/url";
 import getBrowser from "../utils/browser";
 import chrome from "../utils/chrome";
+import normalScript from "../inject/inject";
+import webtoonScript from "../inject/injectWebtoon";
+
+const scripts = {
+    "normal": normalScript,
+    "webtoon": webtoonScript
+}
 
 /**
  * Contains flags and variables needed for Fetcher and Downloader
@@ -44,16 +51,11 @@ class Component {
     }
 
     async _injectScriptToPage(page: Page, script: "normal" | "webtoon"): Promise<void> {
-        let fileToInject = null;
-        if (script === "normal") {
-            this._verbosePrint(console.log, "Injecting normal script");
-            fileToInject = "inject.js";
-        } else if (script === "webtoon") {
-            fileToInject = "injectWebtoon.js";
-        } else {
+        const injectFunction = scripts[script];
+        if(!injectFunction){
             throw new Error("Invalid script specifier (" + script + ")");
         }
-        await page.evaluateOnNewDocument((await import(path.join(__dirname, "../inject/" + fileToInject))).default);
+        await page.evaluateOnNewDocument(injectFunction);
     }
 
     /**
