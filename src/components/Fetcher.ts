@@ -205,7 +205,7 @@ class Fetcher extends Component {
         outputDirectory?: string,
         chromePath?: string,
     }): Promise<Fetcher> {
-        const browser = await getBrowser(options?.flags?.headless ?? false, chrome.getChromePath(options?.chromePath));
+        const browser = await getBrowser(options?.flags?.visible ?? false, chrome.getChromePath(options?.chromePath));
         return new this(browser, options);
     }
 }

@@ -100,6 +100,7 @@ class Component {
                 "Webtoon"
             );
         });
+        await page.close();
         return res;
     }
 
@@ -148,7 +149,7 @@ class Component {
         outputDirectory?: string,
         chromePath?: string,
     }): Promise<Component> {
-        const browser = await getBrowser(options?.flags?.headless ?? false, chrome.getChromePath(options?.chromePath));
+        const browser = await getBrowser(options?.flags?.visible ?? false, chrome.getChromePath(options?.chromePath));
         return new this(browser, options);
     }
 }

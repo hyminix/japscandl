@@ -1,13 +1,10 @@
 import Component from "../src/components/Component";
-import chrome from "../src/utils/chrome";
-import config from "../src/utils/config";
 
 let component: Component;
 describe("Instantiate component", function () {
     this.timeout(0);
     it("Component instantiation", async function () {
-        const configVariables = config.getConfigVariables();
-        component = await Component.launch({ chromePath: chrome.getChromePath(configVariables.chromePath) });
+        component = await Component.launch();
     })
 });
 
@@ -17,6 +14,7 @@ describe("japscan 404 tests", function () {
         return new Promise((resolve, reject) => {
             component
                 .createExistingPage(component.WEBSITE + "/manga/one-piece")
+                .then((page) => page.close())
                 .catch((error) => reject(error));
             resolve(undefined);
         });

@@ -1,14 +1,11 @@
 import Fetcher from "../src/components/Fetcher";
-import chrome from "../src/utils/chrome";
-import config from "../src/utils/config";
 
 let fetcher: Fetcher;
 
 describe("Instantiate Fetcher", function () {
     it("Browser instantiation", async function () {
         this.timeout(0);
-        const configVariables = config.getConfigVariables();
-        fetcher = await Fetcher.launch({chromePath: chrome.getChromePath(configVariables.chromePath)});
+        fetcher = await Fetcher.launch();
     });
 })
 describe("Fetch manga stats tests", function () {

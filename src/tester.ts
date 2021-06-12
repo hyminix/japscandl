@@ -3,11 +3,11 @@ import Downloader from "./components/Downloader";
 Downloader.launch({
     flags: {
         fast: false,
-        headless: false,
+        visible: true,
         timeout: 60,
         verbose: false,
     }
-}).then((downloader) => {
-    downloader
-        .fetchStats("one-piece").then((stats) => console.log(stats));
+}).then(async (downloader) => {
+    const page = await downloader.browser.newPage();
+    page.goto("https://www.japscan.ws/lecture-en-ligne/one-piece/998/");
 });

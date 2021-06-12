@@ -1,7 +1,6 @@
 import fs from "fs";
 import path from "path";
 import sizeOf from "image-size";
-import config from "../src/utils/config";
 import Downloader from "../src/components/Downloader";
 
 let downloader: Downloader;
@@ -13,9 +12,8 @@ const numberOfPages = 11;
 describe("Downloader tests", function () {
     it("Browser instantiation", async function () {
         this.timeout(0);
-        const configVariables = config.getConfigVariables();
         downloader = await Downloader.launch({
-            chromePath: configVariables.chromePath, onEvent: {
+            onEvent: {
                 onPage: (attributes, totalPages) => {
                     const { manga, chapter, page } = attributes;
                     console.log(`\t${manga} ${chapter} ${page}/${totalPages}`);

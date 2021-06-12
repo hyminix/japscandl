@@ -348,7 +348,7 @@ class Downloader extends Fetcher {
         flags?: ComponentFlags,
         outputDirectory?: string,
     }): Promise<Downloader> {
-        const browser = await getBrowser(options?.flags?.headless ?? false, chrome.getChromePath(options?.chromePath));
+        const browser = await getBrowser(options?.flags?.visible ?? false, chrome.getChromePath(options?.chromePath));
         return new this(browser, options);
     }
 
