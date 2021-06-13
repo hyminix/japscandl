@@ -115,7 +115,7 @@ class Downloader extends Fetcher {
     /**
      * @param mangaName manga name
      * @param chapter number of chapter
-     * @param compression default as false, tells if chapter is compressed as a cbr after downloading
+     * @param compression defaults as true, if true the downloaded images are compressed as a cbr after downloading
      * @returns download location
      */
     async downloadChapter(mangaName: string, chapter: number, compression = true): Promise<string> {
@@ -142,7 +142,7 @@ class Downloader extends Fetcher {
      * @param mangaName manga name
      * @param start start chapter
      * @param end end chapter
-     * @param compression default as false, tells if chapter is compressed as a cbr after downloading
+     * @param compression defaults as true, if true the downloaded images are compressed as a cbr after downloading
      * @returns download locations as an array
      */
     async downloadChapters(
@@ -176,12 +176,12 @@ class Downloader extends Fetcher {
 
     /**
      * @param link link to download from
-     * @param compression default as false, tells if chapter is compressed as a cbr after downloading
+     * @param compression defaults as true, if true the downloaded images are compressed as a cbr after downloading
      * @returns chapter's download location
      */
     async downloadChapterFromLink(
         link: string,
-        compression = false
+        compression = true
     ): Promise<string> {
         this._verbosePrint(console.log, "Téléchargement du chapitre depuis le lien " + link);
         const startAttributes = url.getAttributesFromLink(link);
@@ -230,7 +230,7 @@ class Downloader extends Fetcher {
      *
      * @param mangaName manga name
      * @param volumeNumber volume number
-     * @param compression default as true, tells if volume is compressed as a cbr after downloading
+     * @param compression defaults as true, if true the downloaded images are compressed as a cbr after downloading
      * @returns array of paths, where the chapters of the volume were downloaded
      */
     async downloadVolume(
@@ -290,7 +290,7 @@ class Downloader extends Fetcher {
  * @param mangaName manga name
  * @param start start chapter
  * @param end end chapter
- * @param compression default as false, tells if chapter is compressed as a cbr after downloading
+ * @param compression defaults as true, if true the downloaded images are compressed as a cbr after downloading
  * @returns array of download locations for each volume
  */
     async downloadVolumes(
