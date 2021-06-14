@@ -42,7 +42,7 @@ describe("Downloader tests", function () {
             this.timeout(1000 * 60 * 5); // 5 minutes
             return new Promise((resolve, reject) => {
                 downloader
-                    .downloadChapter(mangaToDownload, chapterToDownload)
+                    .downloadChapter(mangaToDownload, chapterToDownload, "cbr")
                     .then(() => resolve(undefined))
                     .catch((error) => reject(error));
             });
@@ -73,13 +73,13 @@ describe("Downloader tests", function () {
             }
         });
         it("cbr must have been created", function () {
-            const cbrName = downloader._getCbrFrom(mangaToDownload, chapterToDownload.toString(), "chapitre");
+            const cbrName = downloader._getZippedFilenameFrom(mangaToDownload, chapterToDownload.toString(), "chapitre", "cbr");
             if (!fs.existsSync(cbrName)) {
                 throw new Error("cbr was not created at " + cbrName);
             }
         });
         it("cbr must not be 0 bytes", function () {
-            const cbrName = downloader._getCbrFrom(mangaToDownload, chapterToDownload.toString(), "chapitre");
+            const cbrName = downloader._getZippedFilenameFrom(mangaToDownload, chapterToDownload.toString(), "chapitre", "cbr");
             const stats = fs.statSync(cbrName);
             if (stats.size === 0) {
                 throw new Error("Cbr has size of 0 bytes");

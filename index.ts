@@ -4,7 +4,7 @@ import fsplus from "./src/utils/fsplus"
 import manga from "./src/utils/manga"
 import mangaFormat from "./src/utils/mangaFormat"
 import url from "./src/utils/url"
-import zipper from "./src/utils/zipper"
+import compress from "./src/utils/compress"
 import * as types from "./src/utils/types";
 
 const utils = {
@@ -14,7 +14,7 @@ const utils = {
     manga,
     mangaFormat,
     url,
-    zipper,
+    compress: compress,
 };
 
 import getBrowser from "./src/utils/browser";

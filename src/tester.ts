@@ -1,5 +1,4 @@
 import Downloader from "./components/Downloader";
-
 Downloader.launch({
     flags: {
         fast: false,
@@ -13,6 +12,6 @@ Downloader.launch({
         }
     }
 }).then(async (downloader) => {
-    await downloader.downloadChapter("one-piece", 998, true);
-    await downloader.destroy();
+    await downloader.downloadChapter("one-piece", 997, "pdf");
+    downloader.destroy();
 });
