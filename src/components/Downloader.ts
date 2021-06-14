@@ -118,7 +118,7 @@ class Downloader extends Fetcher {
      * @param compression defaults as true, if true the downloaded images are compressed as a cbr after downloading
      * @returns download location
      */
-    async downloadChapter(mangaName: string, chapter: number, compression = true): Promise<string> {
+    async downloadChapter(mangaName: string, chapter: number, compression?: "cbr" | "pdf"): Promise<string> {
         this._verbosePrint(console.log,
             "Téléchargement du chapitre " + chapter + " de " + mangaName
         );
@@ -149,7 +149,7 @@ class Downloader extends Fetcher {
         mangaName: string,
         start: number,
         end: number,
-        compression = true
+        compression?: "cbr" | "pdf"
     ): Promise<string[]> {
         this._verbosePrint(console.log,
             "Téléchargement des chapitres de " +
@@ -181,7 +181,7 @@ class Downloader extends Fetcher {
      */
     async downloadChapterFromLink(
         link: string,
-        compression = true
+        compression?: "cbr" | "pdf"
     ): Promise<string> {
         this._verbosePrint(console.log, "Téléchargement du chapitre depuis le lien " + link);
         const startAttributes = url.getAttributesFromLink(link);
@@ -219,11 +219,10 @@ class Downloader extends Fetcher {
                 );
             }
         }
-
-        if (compression) {
-            await zipper.safeZip(this, startAttributes.manga, "chapitre", startAttributes.chapter, [this._getPathFrom(startAttributes)]);
-        }
-        return this._getPathFrom(startAttributes);
+        const zipFunction = (compression === "cbr") ? zipper.safeZip : (compression === "pdf") ? zipper.safePdf : () => { };
+        const downloadPath = this._getPathFrom(startAttributes);
+        await zipFunction(this, startAttributes.manga, "chapitre", startAttributes.chapter, [downloadPath]);
+        return downloadPath;
     }
 
     /**
@@ -236,7 +235,7 @@ class Downloader extends Fetcher {
     async downloadVolume(
         mangaName: string,
         volumeNumber: number,
-        compression = true
+        compression?: "cbr" | "pdf"
     ): Promise<string[]> {
         console.log(
             "Téléchargement du volume " + volumeNumber + " de " + mangaName
@@ -280,8 +279,10 @@ class Downloader extends Fetcher {
                 downloadLocations.push(await waiter);
             }
         }
-        if (compression) {
+        if (compression === "cbr") {
             await zipper.safeZip(this, mangaName, "volume", volumeNumber.toString(), downloadLocations);
+        } else if (compression === "pdf") {
+            await zipper.pdfDirectories(downloadLocations, this._getZippedFilenameFrom(mangaName, volumeNumber.toString(), "volume", "pdf"))
         }
         return downloadLocations;
     }
@@ -297,7 +298,7 @@ class Downloader extends Fetcher {
         mangaName: string,
         start: number,
         end: number,
-        compression = true
+        compression?: "cbr" | "pdf"
     ): Promise<string[][]> {
         this._verbosePrint(console.log,
             "Téléchargement des volumes " + mangaName + " de " + start + " à " + end

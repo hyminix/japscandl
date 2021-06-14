@@ -52,7 +52,7 @@ class Component {
 
     async _injectScriptToPage(page: Page, script: "normal" | "webtoon"): Promise<void> {
         const injectFunction = scripts[script];
-        if(!injectFunction){
+        if (!injectFunction) {
             throw new Error("Invalid script specifier (" + script + ")");
         }
         await page.evaluateOnNewDocument(injectFunction);
@@ -126,10 +126,11 @@ class Component {
      * @param manga manga name
      * @param number number of volume or chapter
      * @param type usually 'volume' or 'chapitre'
-     * @returns cbr path
+     * @param extension extension the file will have
+     * @returns zipped path
      */
-    _getCbrFrom(manga: string, number: string, type: string): string {
-        return path.resolve(`${this.outputDirectory}/${manga}/${manga}-${type}-${number}.cbr`);
+    _getZippedFilenameFrom(manga: string, number: string, type: string, extension: string): string {
+        return path.resolve(`${this.outputDirectory}/${manga}/${manga}-${type}-${number}.${extension}`);
     }
     /**
      * Only prints msg with printFunction if this.verbose is true
