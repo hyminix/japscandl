@@ -1,9 +1,8 @@
 import archiver from "archiver";
 import fs from "fs";
 import path from "path";
-// @ts-ignore
-import imagesToPdf from "images-to-pdf";
 import url from "./url";
+import PDFDocument from "pdfkit";
 import fsplus from "./fsplus";
 import Fetcher from "../components/Fetcher";
 import Component from "../components/Component";
@@ -74,7 +73,7 @@ const compress = {
             const savePath = (compression === "cbr") ? await compress.zipDirectories(directories, name) : await compress.pdfDirectories(directories, name);
             console.log(capitalize(compression) + " terminé! Il est enregistré à l'endroit \"" + savePath + "\" (" + bytesToSize(fs.statSync(savePath).size) + ")");
         } catch (e) {
-            console.log("Erreur pendant la création du" + compression + "(" + name + "):", e);
+            console.log(`Erreur pendant la création du ${compression} (${name}):`, e);
         }
     },
     /**
@@ -150,7 +149,23 @@ const compress = {
                     // add image full path to array
                     .push(path.join(folderPath, image))));
         allImages.sort(sortFunction);
-        return imagesToPdf(allImages, out);
+        //return imagesToPdf(allImages, out);
+        const doc = new PDFDocument({ autoFirstPage: false });
+        doc.pipe(fs.createWriteStream(out));
+
+        allImages.forEach((image) => {
+            //@ts-ignore openImage exists
+            const openedImage = doc.openImage(image);
+            doc.addPage({ size: [openedImage.width, openedImage.height] });
+            doc.image(openedImage, 0, 0);
+        })
+        doc.end();
+        return new Promise((resolve) => {
+            doc.on('end', () => {
+                resolve(out);
+            });
+        });
+
     }
 };
 

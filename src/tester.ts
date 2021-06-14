@@ -1,4 +1,5 @@
 import Downloader from "./components/Downloader";
+import compress from "./utils/compress";
 Downloader.launch({
     flags: {
         fast: false,
@@ -12,6 +13,5 @@ Downloader.launch({
         }
     }
 }).then(async (downloader) => {
-    await downloader.downloadChapter("one-piece", 997, "pdf");
     downloader.destroy();
 });
