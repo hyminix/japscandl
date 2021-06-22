@@ -4,6 +4,7 @@ import { ComponentFlags, MangaInfos } from "../utils/types";
 import url from "../utils/url";
 import getBrowser from "../utils/browser";
 import chrome from "../utils/chrome";
+import fetch from 'node-fetch';
 
 class Fetcher extends Component {
     /**
@@ -159,6 +160,7 @@ class Fetcher extends Component {
             }
             return false;
         });
+        await page.close();
         return rangeLinks.reverse();
     }
 
@@ -198,6 +200,27 @@ class Fetcher extends Component {
         this._verbosePrint(console.log, "Nombre de page(s): " + numberOfPages);
         await startPage.close();
         return numberOfPages;
+    }
+
+    async searchManga(search: string): Promise<{mangakas: string, original_name: null | string, name: string, url: string}[]> {
+        const resp = await fetch('https://www.japscan.ws/live-search/', {
+            method: 'POST',
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:89.0) Gecko/20100101 Firefox/89.0',
+                'Accept': 'application/json',
+                'Accept-Language': 'en-US,en;q=0.5',
+                'X-Requested-With': 'XMLHttpRequest',
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'Origin': 'https://www.japscan.ws',
+                'Alt-Used': 'www.japscan.ws',
+                'Connection': 'keep-alive',
+                'Pragma': 'no-cache',
+                'Cache-Control': 'no-cache',
+                'TE': 'Trailers'
+            },
+            body: 'search=' + search
+        });
+        return resp.json();
     }
 
     static async launch(options?: {
