@@ -8,26 +8,16 @@ Downloader.launch({
     },
     onEvent: {
         onPage: (attributes, total) => {
-            console.log(attributes.page, total)
+            console.log("onPage:", attributes.page, total)
         },
         onChapter: (attributes, current, total) => {
-            console.log(attributes, current, total);
+            console.log("onChapter:", attributes, current, total);
+        },
+        onVolume: (manga, current, total) => {
+            console.log("onVolume:", manga, current, total);
         }
     }
 }).then(async (downloader) => {
-    /*
-    const page = await downloader.browser.newPage();
-    await page.goto("http://127.0.0.1:5500/index.html");
-    await page.click('input');
-    await page.keyboard.type("hello");
-    await page.screenshot({
-        path: "test.jpg",
-    })
-    */
-    const results = await downloader.searchManga("One Piece");
-    console.log(results.length);
-    results.forEach((res) => {
-        console.log(res.name, res.url);
-    })
+    await downloader.downloadChapter("one-piece", 997, {onPage: (attributes, total) => console.log(attributes, "/", total)});
     await downloader.destroy();
 });

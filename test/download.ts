@@ -27,7 +27,7 @@ function testDownloadOfManga(mangaName: string, chapter: number, numberOfPages: 
         it(`download ${mangaName} chapter ${chapter}`, function () {
             return new Promise((resolve, reject) => {
                 downloader
-                    .downloadChapter(mangaName, chapter, type)
+                    .downloadChapter(mangaName, chapter, {compression: type})
                     .then(() => resolve(undefined))
                     .catch((error) => reject(error));
             });
