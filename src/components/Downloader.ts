@@ -165,6 +165,7 @@ class Downloader extends Fetcher {
         );
         this._verbosePrint(console.log, "Liens à télécharger: ", linksToDownload);
         let i = 1;
+        this.onChapter({manga: mangaName, chapter: start.toString(), page: '0'}, i++, linksToDownload.length);
         for (const link of linksToDownload) {
             chapterDownloadLocations.push(await this.downloadChapterFromLink(link, compression));
             this.onChapter(url.getAttributesFromLink(link), i++, linksToDownload.length);
@@ -260,7 +261,8 @@ class Downloader extends Fetcher {
         this._verbosePrint(console.log, "Récupéré");
         const waiters = [];
         const downloadLocations: Array<string> = [];
-        let i = 1;
+        let i = 0;
+        this.onChapter({manga: mangaName, chapter: volumeNumber.toString(), page: '0'}, i++, toDownloadFrom.length);
         for (const link of toDownloadFrom) {
             // should return path of download
             const chapterPromise = this.downloadChapterFromLink(link);
@@ -306,6 +308,7 @@ class Downloader extends Fetcher {
         }
         const volumeDownloadLocations: Array<Array<string>> = [];
         const total = end - start + 1;
+        this.onVolume(mangaName, 0, total);
         for (let i = start; i <= end; i++) {
             const downloadLocations = await this.downloadVolume(mangaName, i, compression);
             volumeDownloadLocations.push(downloadLocations);
