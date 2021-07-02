@@ -15,9 +15,6 @@ describe("Downloader tests", function () {
                     console.log(`\t${manga} ${chapter} ${page}/${totalPages}`);
                 }
             },
-            flags: {
-                visible: true
-            }
         });
     });
     testDownloadOfManga("one-piece", 998, 11, { number: 4, height: 1300, width: 1790 }, "cbr");
