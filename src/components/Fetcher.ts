@@ -1,6 +1,6 @@
 import { Browser, Page } from "puppeteer";
 import Component from "./Component";
-import { ComponentFlags, MangaContent, MangaInfos, Volume } from "../utils/types";
+import { Chapter, ComponentFlags, MangaContent, MangaInfos, Volume } from "../utils/types";
 import url from "../utils/url";
 import getBrowser from "../utils/browser";
 import chrome from "../utils/chrome";
@@ -131,6 +131,18 @@ class Fetcher extends Component {
         start: number,
         end: number
     ): Promise<string[]> {
+        return (await this.fetchChaptersBetweenRange(mangaName, start, end))
+            .map((chapter => chapter.link));
+    }
+
+    async fetchChaptersBetweenRange(
+        mangaName: string,
+        start: number,
+        end: number
+    ): Promise<Chapter[]> {
+        function getAllChaptersFromContent(content: MangaContent) {
+            return Array.prototype.concat.apply([], content.volumes.map((volume) => volume.chapters));
+        }
         if (end < start) {
             throw new Error(
                 "Le début ne peut pas être plus grand que la fin (début: " +
@@ -140,28 +152,16 @@ class Fetcher extends Component {
                 ")"
             );
         }
-        const link = url.buildMangaLink(mangaName, this);
-        const page = await this.createExistingPage(link);
-        const linksToChapters = await page.evaluate(() => {
-            const allElements = <NodeListOf<HTMLAnchorElement>>(
-                document.querySelectorAll("#chapters_list > .collapse > div > a")
-            );
-            const links: string[] = [];
-            allElements.forEach((el: HTMLAnchorElement) => {
-                links.push(el.href);
-            });
-            return links;
-        });
-        const rangeLinks = linksToChapters.filter((_link) => {
-            if (_link.includes("volume-")) return false;
-            const chapterNumber = +_link.split(/\/+/)[4];
-            if (chapterNumber >= start && chapterNumber <= end) {
-                return true;
-            }
-            return false;
-        });
-        await page.close();
-        return rangeLinks.reverse();
+        const data = await this.getMangaContent(mangaName);
+        // filter ou out of range chapters
+        const filteredChapters =
+            // get all chapters objects in all volumes as an array
+            getAllChaptersFromContent(data)
+                .filter((chapter) => {
+                    const chapterNumber = +url.getAttributesFromLink(chapter.link).chapter;
+                    return chapterNumber >= start && chapterNumber <= end;
+                })
+        return filteredChapters;
     }
 
     /**
@@ -174,29 +174,13 @@ class Fetcher extends Component {
             "Recupération du nombre de pages pour le chapitre " + link
         );
         const startPage = await this.createExistingPage(link);
-        const chapterSelectSelector =
-            "div.div-select:nth-child(2) > .ss-main > .ss-content > .ss-list";
-        try {
-            this._verbosePrint(console.log, "Attente du script de page...");
-            await startPage.waitForSelector(chapterSelectSelector, {
-                timeout: this.timeout,
-            });
-            this._verbosePrint(console.log, "Attente terminée");
-        } catch (e) {
+        const chapterSelectSelector = "div.div-select:nth-child(2) > .ss-main > .ss-content > .ss-list";
+        const chapterSelect = await this.waitForSelector(startPage, chapterSelectSelector);
+        if (!chapterSelect) {
             await startPage.close();
             return await this.fetchNumberOfPagesInChapter(link);
         }
-        const chapterSelect = await startPage.$(chapterSelectSelector);
-
-        if (chapterSelect === null) {
-            throw new Error(
-                "Japdl n'a pas pu déterminer le nombre de pages dans le chapitre (menu déroulant) du lien " +
-                link
-            );
-        }
-        const numberOfPages = await chapterSelect.evaluate(
-            (el) => el.childElementCount
-        );
+        const numberOfPages = await chapterSelect.evaluate((el) => el.childElementCount);
         this._verbosePrint(console.log, "Nombre de page(s): " + numberOfPages);
         await startPage.close();
         return numberOfPages;

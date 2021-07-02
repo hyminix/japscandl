@@ -35,7 +35,7 @@ const manga = {
         if (typeof param === "string") {
             return this.getFilenameFrom(url.getAttributesFromLink(param));
         } else {
-            return `${param.chapter}_${param.page}.jpg`;
+            return `${param.chapter}_${param.page}.png`;
         }
     },
 };

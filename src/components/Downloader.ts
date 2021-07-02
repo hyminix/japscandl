@@ -1,4 +1,4 @@
-import { Browser, ElementHandle } from "puppeteer";
+import { Browser } from "puppeteer";
 import path from "path";
 // utils
 import compress from "../utils/compress";
@@ -59,20 +59,6 @@ class Downloader extends Fetcher {
      * @returns if image could be downloaded
      */
     async downloadImageFromLink(link: string): Promise<boolean> {
-        const waitAndGetCanvas = async (): Promise<ElementHandle<Element> | false> => {
-            const popupCanvasSelector = "body > canvas";
-            try {
-                this._verbosePrint(console.log, "Attente du script de page...");
-                await page.waitForSelector(popupCanvasSelector, {
-                    timeout: this.timeout,
-                });
-                this._verbosePrint(console.log, "Attente terminée");
-            } catch (e) {
-                console.log("La page" + link + "n'a pas l'air d'avoir d'images");
-                return false;
-            }
-            return await page.$(popupCanvasSelector) ?? false;
-        }
         this._verbosePrint(console.log, "Téléchargement de l'image depuis le lien " + link);
         const page = await this.createExistingPage(link, "normal");
         const attributes = url.getAttributesFromLink(link);
@@ -84,7 +70,8 @@ class Downloader extends Fetcher {
         );
         fsplus.createPath(savePath);
         savePath = path.posix.join(savePath, manga.getFilenameFrom(attributes));
-        const canvasElement = await waitAndGetCanvas();
+        const popupCanvasSelector = "body > canvas";
+        const canvasElement = await this.waitForSelector(page, popupCanvasSelector);
         if (!canvasElement) return false;
         const dimensions = await canvasElement.evaluate((el) => {
             // remove everything from page except canvas
@@ -100,10 +87,7 @@ class Downloader extends Fetcher {
         this._verbosePrint(console.log, "Téléchargement de l'image...");
         await canvasElement
             .screenshot({
-                omitBackground: true,
                 path: savePath,
-                type: "jpeg",
-                quality: 100,
             })
             .catch((e) => console.log("Erreur dans la capture de l'image", e));
         page.close();
@@ -139,7 +123,7 @@ class Downloader extends Fetcher {
         }
         mangaName = mangaNameStats;
         const link = url.buildLectureLink(mangaName, chapter.toString(), this);
-        return this.downloadChapterFromLink(link, {compression, onPage});
+        return this.downloadChapterFromLink(link, { compression, onPage });
     }
 
     /**
@@ -178,7 +162,7 @@ class Downloader extends Fetcher {
         let i = 0;
         (onChapter ?? this.onChapter)({ manga: mangaName, chapter: start.toString(), page: '0' }, i++, linksToDownload.length);
         for (const link of linksToDownload) {
-            chapterDownloadLocations.push(await this.downloadChapterFromLink(link, {compression, onPage}));
+            chapterDownloadLocations.push(await this.downloadChapterFromLink(link, { compression, onPage }));
             (onChapter ?? this.onChapter)(url.getAttributesFromLink(link), i++, linksToDownload.length);
         }
         return chapterDownloadLocations;
@@ -337,7 +321,7 @@ class Downloader extends Fetcher {
         const total = end - start + 1;
         (onVolume ?? this.onVolume)(mangaName, 0, total);
         for (let i = start; i <= end; i++) {
-            const downloadLocations = await this.downloadVolume(mangaName, i, {compression, onChapter, onPage});
+            const downloadLocations = await this.downloadVolume(mangaName, i, { compression, onChapter, onPage });
             volumeDownloadLocations.push(downloadLocations);
             (onVolume ?? this.onVolume)(mangaName, i - start + 1, total);
         }

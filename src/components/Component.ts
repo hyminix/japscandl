@@ -1,4 +1,4 @@
-import { Browser, Page, Response } from "puppeteer";
+import { Browser, ElementHandle, Page, Response } from "puppeteer";
 import path from "path";
 import { ComponentFlags, MangaAttributes } from "../utils/types";
 import url from "../utils/url";
@@ -154,6 +154,21 @@ class Component {
     }): Promise<Component> {
         const browser = await getBrowser(options?.flags?.visible ?? false, chrome.getChromePath(options?.chromePath));
         return new this(browser, options);
+    }
+
+    protected waitForSelector(page: Page, selector: string): Promise<ElementHandle<Element> | false> {
+        return new Promise((resolve) => {
+            this._verbosePrint(console.log, "Attente du script de page...");
+            page.waitForSelector(selector)
+                .then((element) => {
+                    resolve(element);
+                    this._verbosePrint(console.log, "Attente terminée");
+                })
+                .catch(() => {
+                    resolve(false);
+                    this._verbosePrint(console.log, "L'élement '" + selector + "' n'est pas apparu");
+                });
+        })
     }
 }
 
