@@ -1,6 +1,6 @@
-import { Browser } from "puppeteer";
+import { Browser, Page } from "puppeteer";
 import Component from "./Component";
-import { ComponentFlags, MangaInfos } from "../utils/types";
+import { ComponentFlags, MangaContent, MangaInfos, Volume } from "../utils/types";
 import url from "../utils/url";
 import getBrowser from "../utils/browser";
 import chrome from "../utils/chrome";
@@ -202,7 +202,12 @@ class Fetcher extends Component {
         return numberOfPages;
     }
 
-    async searchManga(search: string): Promise<{mangakas: string, original_name: null | string, name: string, url: string}[]> {
+    /**
+     * Search the `search` parameter on japscan and returns the results as an array
+     * @param search string to search on japscan
+     * @returns json object containing results given by japscan
+     */
+    async searchManga(search: string): Promise<{ mangakas: string, original_name: null | string, name: string, url: string }[]> {
         const resp = await fetch('https://www.japscan.ws/live-search/', {
             method: 'POST',
             headers: {
@@ -221,6 +226,82 @@ class Fetcher extends Component {
             body: 'search=' + search
         });
         return resp.json();
+    }
+    /**
+     * this function gets all volumes and chapters from the manga page
+     * @param manga manga to get infos from
+     * @param page can give a page to prevent it from being created
+     */
+    async getMangaContent(manga: string, page?: Page): Promise<MangaContent> {
+        const link = url.buildMangaLink(manga, this);
+        // indicates if we need to close the page at the end of the function (in case we create a new page)
+        let closePage = false;
+        if (!page) {
+            // if there is no page, create one in the parameter variable
+            page = await this.browser.newPage();
+            // so we will need to close it
+            closePage = true;
+        }
+        // applies to wrong url pages and new pages
+        if (page.url() !== link) {
+            await page.goto(link);
+        }
+        // div containing everything
+        const chaptersList = await page.$('#chapters_list');
+        if (!chaptersList) throw new Error("La liste des chapitres du manga n'a pas pu être récupérée");
+
+        const volumes = await chaptersList.evaluate((chaptersListEl) => {
+            const ResultVolumes: Volume[] = [];
+            const volumes = chaptersListEl.querySelectorAll('h4');
+            const chapters = chaptersListEl.querySelectorAll(".collapse");
+            for (let i = 0; i < volumes.length; i++) {
+                const chaptersResult: { name: string, link: string }[] = [];
+                const aEls = chapters.item(i).querySelectorAll('div > a');
+                aEls.forEach((el) => {
+                    chaptersResult.push({
+                        name: el.textContent?.trim() as string,
+                        link: (<HTMLAnchorElement>el).href.trim()
+                    });
+                });
+                const splitted = volumes.item(i).textContent?.split('Volume ');
+                /**
+                 * if `'Volume '` was found in the string, get second element of the array.
+                 * Usually, the splitted array is `['', '<number>']`, so we just take the number.
+                 * But sometimes it is `['', '<number> : <title of the volume>']`.
+                 * In this case, using parseFloat will read `<number>` and return its value without reading
+                 * the rest of the string. Then we can convert the number back to a string to get only the
+                 * volume number.
+                 *
+                 * if `'Volume '` was not found in the string, it probably means that it's a webtoon,
+                 * so we check for webtoon. If it is, return webtoon. If it is something else, we
+                 * can simply return 'notFound', because we don't know what type of volume it is.
+                 */
+                const volumeNumber = (splitted)
+                    ? parseFloat(splitted[1].trim()).toString()
+                    : (volumes.item(i).textContent?.trim().includes("Webtoon")
+                        ? "Webtoon"
+                        : "notFound");
+                const volume = {
+                    name: volumes.item(i).textContent?.trim() as string,
+                    num: volumeNumber,
+                    chapters: chaptersResult.reverse(),
+                }
+                ResultVolumes.push(volume);
+            }
+            return ResultVolumes.reverse();
+        });
+
+        const synopsis = await page.$eval('p.list-group-item', (el) => {
+            return el.textContent || "";
+        })
+        // close page if we created it earlier
+        if (closePage) page.close();
+
+        return {
+            manga,
+            synopsis,
+            volumes
+        }
     }
 
     static async launch(options?: {

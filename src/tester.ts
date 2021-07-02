@@ -1,4 +1,5 @@
 import Downloader from "./components/Downloader";
+import fs from "fs";
 Downloader.launch({
     flags: {
         fast: false,
@@ -18,6 +19,7 @@ Downloader.launch({
         }
     }
 }).then(async (downloader) => {
-    await downloader.downloadChapter("one-piece", 997, {onPage: (attributes, total) => console.log(attributes, "/", total)});
+    const data = await downloader.getMangaContent("bleach");
+    fs.writeFileSync("test.json", JSON.stringify(data, null, 3));
     await downloader.destroy();
 });

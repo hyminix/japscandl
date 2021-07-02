@@ -5,6 +5,26 @@ import Downloader from "../src/components/Downloader";
 
 let downloader: Downloader;
 
+describe("Downloader tests", function () {
+    it("Browser instantiation", async function () {
+        this.timeout(0);
+        downloader = await Downloader.launch({
+            onEvent: {
+                onPage: (attributes, totalPages) => {
+                    const { manga, chapter, page } = attributes;
+                    console.log(`\t${manga} ${chapter} ${page}/${totalPages}`);
+                }
+            },
+            flags: {
+                visible: true
+            }
+        });
+    });
+    testDownloadOfManga("one-piece", 998, 11, { number: 4, height: 1300, width: 1790 }, "cbr");
+    testDownloadOfManga("jujutsu-kaisen", 152, 10, { number: 10, height: 1300, width: 897 }, "pdf");
+});
+
+
 function testDownloadOfManga(mangaName: string, chapter: number, numberOfPages: number, pageToCheck: { number: number, height: number, width: number }, type: "cbr" | "pdf") {
     describe(`Downloading ${mangaName} chapter ${chapter}`, function () {
         this.timeout(1000 * 60 * 5); // 5 minutes
@@ -92,20 +112,3 @@ function testDownloadOfManga(mangaName: string, chapter: number, numberOfPages: 
         });
     });
 }
-
-describe("Downloader tests", function () {
-    it("Browser instantiation", async function () {
-        this.timeout(0);
-        downloader = await Downloader.launch({
-            onEvent: {
-                onPage: (attributes, totalPages) => {
-                    const { manga, chapter, page } = attributes;
-                    console.log(`\t${manga} ${chapter} ${page}/${totalPages}`);
-                }
-            }
-        });
-    });
-    testDownloadOfManga("one-piece", 998, 11, { number: 4, height: 1300, width: 1790 }, "cbr");
-    testDownloadOfManga("jujutsu-kaisen", 152, 10, { number: 10, height: 1300, width: 897 }, "pdf");
-
-});

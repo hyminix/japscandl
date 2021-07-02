@@ -25,3 +25,20 @@ export type ComponentFlags = {
     timeout?: number;
     visible?: boolean;
 }
+
+export type MangaContent = {
+    manga: string,
+    synopsis: string,
+    volumes: Volume[],
+}
+
+export type Volume = {
+    name: string,
+    num: string,
+    chapters: Chapter[],
+}
+
+export type Chapter = {
+    name: string,
+    link: string,
+}
