@@ -31,11 +31,11 @@ const manga = {
         param:
             | string
             | MangaAttributes
-    ): string {
+    , format: "png" | "jpg"): string {
         if (typeof param === "string") {
-            return this.getFilenameFrom(url.getAttributesFromLink(param));
+            return this.getFilenameFrom(url.getAttributesFromLink(param), format);
         } else {
-            return `${param.chapter}_${param.page}.png`;
+            return `${param.chapter}_${param.page}.${format}`;
         }
     },
 };

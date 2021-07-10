@@ -19,6 +19,7 @@ class Downloader extends Fetcher {
         totalPages: number) => void = () => { };
     onChapter: (attributes: MangaAttributes, currentChapter: number, totalChapters: number) => void = () => { };
     onVolume: (mangaName: string, current: number, total: number) => void = () => { };
+    imageFormat: "jpg" | "png";
 
     /**
      * Instantiates a browser and reads config file to get output directory
@@ -35,6 +36,7 @@ class Downloader extends Fetcher {
         },
         flags?: ComponentFlags,
         outputDirectory?: string,
+        imageFormat?: "jpg" | "png",
     }) {
         super(browser, options);
         // managing options
@@ -52,6 +54,7 @@ class Downloader extends Fetcher {
                 "Attention! Le flag 'fast' est activé. Le programme ne garantit plus de récupérer toutes les images des chapitres. Une bonne connexion et un bon ordinateur est très fortement recommandé pour l'utilisation de ce flag. Dans le cas contraire, des images pourraient manquer."
             );
         }
+        this.imageFormat = options?.imageFormat ?? "png";
     }
 
     /**
@@ -69,7 +72,7 @@ class Downloader extends Fetcher {
             attributes.chapter
         );
         fsplus.createPath(savePath);
-        savePath = path.posix.join(savePath, manga.getFilenameFrom(attributes));
+        savePath = path.posix.join(savePath, manga.getFilenameFrom(attributes, this.imageFormat));
         const popupCanvasSelector = "body > canvas";
         const canvasElement = await this.waitForSelector(page, popupCanvasSelector);
         if (!canvasElement) return false;
@@ -361,6 +364,7 @@ class Downloader extends Fetcher {
         },
         flags?: ComponentFlags,
         outputDirectory?: string,
+        imageFormat?: "png" | "jpg",
     }): Promise<Downloader> {
         const browser = await getBrowser(options?.flags?.visible ?? false, chrome.getChromePath(options?.chromePath));
         return new this(browser, options);
