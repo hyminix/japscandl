@@ -12,6 +12,8 @@
     "build": "npm run tsc && pkg .",
     "test": "npm run tsc && mocha js/test/ --recursive --exit",
     "dtest": "npm run tsc && mocha js/test/download.js --exit",
+    "ftest": "npm run tsc && mocha js/test/fetch.js --exit",
+    "ctest": "npm run tsc && mocha js/test/component.js --exit",
     "tsc": "tsc",
     "download": "npm run tsc && node js/src/utils/chromiumDownloader.js",
     "downloadtest": "npm run tsc && node js/src/utils/chromiumDownloader.js --testing",

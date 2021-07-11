@@ -8,6 +8,7 @@ export interface MangaInfos {
     volumes: number;
     chapters: number;
     name: string;
+    synopsis: string;
 }
 
 export type DownloaderOnPage =
@@ -34,7 +35,7 @@ export type MangaContent = {
 
 export type Volume = {
     name: string,
-    num: string,
+    number: string,
     chapters: Chapter[],
 }
 

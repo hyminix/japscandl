@@ -21,12 +21,12 @@ describe("Fetch manga stats tests", function () {
                 const supposedResultsString = JSON.stringify(supposedResults);
                 const infosString = JSON.stringify(infos);
                 if (supposedResultsString !== infosString) {
-                    reject(
+                    reject(new Error(
                         "Wrong fetch. Supposed: " +
                         supposedResultsString +
                         "\nGot: " +
                         infosString
-                    );
+                    ));
                 }
                 resolve(undefined);
             });
@@ -51,12 +51,12 @@ describe("Fetch manga stats tests", function () {
             fetcher.fetchVolumeChapters(97, "one-piece").then((chapters) => {
                 const chaptersToString = chapters.toString();
                 if (chaptersToString !== supposedResultsString) {
-                    reject(
+                    reject(new Error(
                         "Wrong fetch. Supposed: " +
                         supposedResultsString +
                         "\nGot: " +
                         chaptersToString
-                    );
+                    ));
                 }
                 resolve(undefined);
             });
@@ -71,20 +71,20 @@ describe("Fetch manga stats tests", function () {
                 )
                 .then((numberOfPages) => {
                     if (supposedResult !== numberOfPages) {
-                        reject(
+                        reject(new Error(
                             "Wrong fetch. Supposed: " +
                             supposedResult +
                             "\nGot: " +
                             numberOfPages
-                        );
+                        ));
                     }
                     resolve(undefined);
                 });
         });
     });
     it("Fetchs range between one-piece 1000 and 1005", function () {
-        function getListOrNone(arr: string[]){
-            if(arr.length) return arr.join(' | ');
+        function getListOrNone(arr: string[]) {
+            if (arr.length) return arr.join(' | ');
             return "none";
         }
         const supposedLinks = [
@@ -115,10 +115,10 @@ describe("Fetch manga stats tests", function () {
             fetcher
                 .fetchChapterLinksBetweenRange("one-piece", 1005, 1004)
                 .then((links) =>
-                    reject(
+                    reject(new Error(
                         "Was supposed to throw because invalid, got links: " +
                         links.toString()
-                    )
+                    ))
                 )
                 .catch((error) => resolve(error));
         });

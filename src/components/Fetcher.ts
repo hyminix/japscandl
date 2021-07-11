@@ -26,41 +26,17 @@ class Fetcher extends Component {
         mangaName: string
     ): Promise<MangaInfos> {
         this._verbosePrint(console.log, "Récupération des infos du manga " + mangaName);
-        const link = url.buildMangaLink(mangaName, this);
-        const page = await this.createExistingPage(link);
-        const pageMangaName = url.getAttributesFromLink(page.url()).manga;
-        const chapterList = await page.$("#chapters_list");
-        const volumes = await chapterList?.$$("h4");
-        const lastChapterLink = await chapterList?.$eval(".collapse", (el) => {
-            const div = el.querySelector("div");
-            if (div !== null) {
-                const a = div.querySelector("a");
-                if (a !== null) {
-                    return a.href;
-                }
-            }
-        });
-
-        if (lastChapterLink === undefined) {
-            throw new Error(
-                "japdl n'a pas pu récupérer les infos de " +
-                mangaName +
-                ", ce manga ne se trouve pas à ce nom sur japscan"
-            );
-        }
-        if (volumes === undefined) {
-            throw new Error(
-                "japdl n'a pas pu trouver la liste des chapitres sur la page du manga " +
-                mangaName
-            );
-        }
-        const chapter = url.getAttributesFromLink(lastChapterLink).chapter;
-        page.close();
+        const data = await this.getMangaContent(mangaName);
+        // extract chapter number from last chapter link attributes
+        const lastVolume = data.volumes[data.volumes.length-1];
+        const lastChapter = lastVolume.chapters[lastVolume.chapters.length - 1];
+        const lastChapterNumber = +url.getAttributesFromLink(lastChapter.link).chapter;
         return {
-            volumes: volumes?.length,
-            chapters: +chapter,
-            name: pageMangaName,
-        };
+            volumes: data.volumes.length,
+            chapters: lastChapterNumber,
+            name: data.manga,
+            synopsis: data.synopsis,
+        }
     }
     /**
      *
@@ -78,45 +54,17 @@ class Fetcher extends Component {
             " du manga " +
             mangaName
         );
-        const link = url.buildMangaLink(mangaName, this);
-
-        const page = await this.createExistingPage(link);
-        const chapterList = await page.$("#chapters_list");
-        const numberOfVolumes = (await this.fetchStats(mangaName)).volumes;
-
-        if (volumeNumber > numberOfVolumes || volumeNumber <= 0) {
+        const data = await this.getMangaContent(mangaName);
+        const volume = data.volumes.find((volume) => +volume.number === volumeNumber);
+        if (volume === undefined) {
             throw new Error(
-                `Le numéro de volume (${volumeNumber}) ne peut pas être plus grand que le nombre actuel de volumes (${numberOfVolumes}) ou moins de 1`
+                "japdl n'a pas pu trouver le volume " +
+                volumeNumber +
+                " du manga " +
+                mangaName
             );
         }
-        const chapters = await chapterList?.$$(".collapse");
-        if (chapters === undefined) {
-            throw new Error(
-                "Le programme n'a pas pu accéder au contenu du volume " + volumeNumber
-            );
-        }
-        try {
-            const volumeLinks = await chapters[
-                chapters.length - volumeNumber
-            ].evaluate((el: Element) => {
-                const result: Array<string> = [];
-                el.querySelectorAll("div").forEach((el) => {
-                    const aElement = el.querySelector("a");
-                    if (aElement === null) {
-                        result.push("https://japscan.se/lecture-en-ligne/notFound");
-                    } else {
-                        result.push(aElement.href);
-                    }
-                });
-                return result;
-            });
-            await page.close();
-            return volumeLinks.reverse();
-        } catch (e) {
-            throw new Error(
-                `japdl n'a pas pu récupérer les chapitres du volume ${volumeNumber} du manga ${mangaName}, qui a une longueur de chapitre de ${chapters.length}, erreur ${e}`
-            );
-        }
+        return volume.chapters.map((chapter) => chapter.link);
     }
 
     /**
@@ -267,7 +215,7 @@ class Fetcher extends Component {
                         : "notFound");
                 const volume = {
                     name: volumes.item(i).textContent?.trim() as string,
-                    num: volumeNumber,
+                    number: volumeNumber,
                     chapters: chaptersResult.reverse(),
                 }
                 ResultVolumes.push(volume);
