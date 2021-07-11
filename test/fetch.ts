@@ -15,6 +15,7 @@ describe("Fetch manga stats tests", function () {
             volumes: 41,
             chapters: 347,
             name: "nanatsu-no-taizai",
+            synopsis: "Il y a dix ans, un groupe de mercenaires appelé les Seven Deadly Sins s'est rebellé contre les Chevaliers Sacrés, la garde du royaume… Depuis, ils ont disparu et personne ne sait ce qu'ils sont devenus. Un beau jour, une mystérieuse jeune fille s'écroule dans la taverne de Meliodas, un garçon enjoué qui parcourt le monde en compagnie de son cochon loquace. Cette jeune fille n'est autre que la princesse Elizabeth qui désire ardemment retrouver les Seven Deadly Sins. En effet, ce sont les seuls à même de lutter contre les Chevaliers Sacrés, qui ont fait prisonnier le roi et qui asservissent toute la population du royaume ! Très vite, elle va découvrir que Meliodas n'est pas un simple patron de taverne mais un guerrier à la puissance exceptionnelle..."
         };
         return new Promise((resolve, reject) => {
             fetcher.fetchStats("nanatsu-no-taizai").then((infos) => {

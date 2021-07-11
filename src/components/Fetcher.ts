@@ -28,7 +28,7 @@ class Fetcher extends Component {
         this._verbosePrint(console.log, "Récupération des infos du manga " + mangaName);
         const data = await this.getMangaContent(mangaName);
         // extract chapter number from last chapter link attributes
-        const lastVolume = data.volumes[data.volumes.length-1];
+        const lastVolume = data.volumes[data.volumes.length - 1];
         const lastChapter = lastVolume.chapters[lastVolume.chapters.length - 1];
         const lastChapterNumber = +url.getAttributesFromLink(lastChapter.link).chapter;
         return {
@@ -186,7 +186,9 @@ class Fetcher extends Component {
             const ResultVolumes: Volume[] = [];
             const volumes = chaptersListEl.querySelectorAll('h4');
             const chapters = chaptersListEl.querySelectorAll(".collapse");
-            for (let i = 0; i < volumes.length; i++) {
+            const isAVolumeMissing = volumes[0].compareDocumentPosition(chapters[0]) & Node.DOCUMENT_POSITION_PRECEDING;
+            for (let i = 0; i < chapters.length; i++) {
+                const volumeAt = volumes[isAVolumeMissing ? i - 1 : i];
                 const chaptersResult: { name: string, link: string }[] = [];
                 const aEls = chapters.item(i).querySelectorAll('div > a');
                 aEls.forEach((el) => {
@@ -195,30 +197,39 @@ class Fetcher extends Component {
                         link: (<HTMLAnchorElement>el).href.trim()
                     });
                 });
-                const splitted = volumes.item(i).textContent?.split('Volume ');
-                /**
-                 * if `'Volume '` was found in the string, get second element of the array.
-                 * Usually, the splitted array is `['', '<number>']`, so we just take the number.
-                 * But sometimes it is `['', '<number> : <title of the volume>']`.
-                 * In this case, using parseFloat will read `<number>` and return its value without reading
-                 * the rest of the string. Then we can convert the number back to a string to get only the
-                 * volume number.
-                 *
-                 * if `'Volume '` was not found in the string, it probably means that it's a webtoon,
-                 * so we check for webtoon. If it is, return webtoon. If it is something else, we
-                 * can simply return 'notFound', because we don't know what type of volume it is.
-                 */
-                const volumeNumber = (splitted)
-                    ? parseFloat(splitted[1].trim()).toString()
-                    : (volumes.item(i).textContent?.trim().includes("Webtoon")
-                        ? "Webtoon"
-                        : "notFound");
-                const volume = {
-                    name: volumes.item(i).textContent?.trim() as string,
-                    number: volumeNumber,
-                    chapters: chaptersResult.reverse(),
+                if (isAVolumeMissing && i === 0) {
+                    const volume: Volume = {
+                        name: "Volume inconnu",
+                        number: "?",
+                        chapters: chaptersResult.reverse(),
+                    };
+                    ResultVolumes.push(volume);
+                } else {
+                    const splitted = volumeAt.textContent?.split('Volume ');
+                    /**
+                     * if `'Volume '` was found in the string, get second element of the array.
+                     * Usually, the splitted array is `['', '<number>']`, so we just take the number.
+                     * But sometimes it is `['', '<number> : <title of the volume>']`.
+                     * In this case, using parseFloat will read `<number>` and return its value without reading
+                     * the rest of the string. Then we can convert the number back to a string to get only the
+                     * volume number.
+                     *
+                     * if `'Volume '` was not found in the string, it probably means that it's a webtoon,
+                     * so we check for webtoon. If it is, return webtoon. If it is something else, we
+                     * can simply return 'notFound', because we don't know what type of volume it is.
+                     */
+                    const volumeNumber = (splitted)
+                        ? parseFloat(splitted[1].trim()).toString()
+                        : (volumeAt.textContent?.trim().includes("Webtoon")
+                            ? "Webtoon"
+                            : "notFound");
+                    const volume = {
+                        name: volumeAt.textContent?.trim() as string,
+                        number: volumeNumber,
+                        chapters: chaptersResult.reverse(),
+                    }
+                    ResultVolumes.push(volume);
                 }
-                ResultVolumes.push(volume);
             }
             return ResultVolumes.reverse();
         });
