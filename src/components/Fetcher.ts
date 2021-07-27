@@ -26,7 +26,7 @@ class Fetcher extends Component {
         mangaName: string
     ): Promise<MangaInfos> {
         this._verbosePrint(console.log, "Récupération des infos du manga " + mangaName);
-        const data = await this.getMangaContent(mangaName);
+        const data = await this.fetchMangaContent(mangaName);
         // extract chapter number from last chapter link attributes
         const lastVolume = data.volumes[data.volumes.length - 1];
         const lastChapter = lastVolume.chapters[lastVolume.chapters.length - 1];
@@ -54,7 +54,7 @@ class Fetcher extends Component {
             " du manga " +
             mangaName
         );
-        const data = await this.getMangaContent(mangaName);
+        const data = await this.fetchMangaContent(mangaName);
         const volume = data.volumes.find((volume) => +volume.number === volumeNumber);
         if (volume === undefined) {
             throw new Error(
@@ -100,7 +100,7 @@ class Fetcher extends Component {
                 ")"
             );
         }
-        const data = await this.getMangaContent(mangaName);
+        const data = await this.fetchMangaContent(mangaName);
         // filter ou out of range chapters
         const filteredChapters =
             // get all chapters objects in all volumes as an array
@@ -164,7 +164,7 @@ class Fetcher extends Component {
      * @param manga manga to get infos from
      * @param page can give a page to prevent it from being created
      */
-    async getMangaContent(manga: string, page?: Page): Promise<MangaContent> {
+    async fetchMangaContent(manga: string, page?: Page): Promise<MangaContent> {
         const link = url.buildMangaLink(manga, this);
         // indicates if we need to close the page at the end of the function (in case we create a new page)
         let closePage = false;
