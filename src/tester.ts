@@ -19,7 +19,7 @@ Downloader.launch({
         }
     }
 }).then(async (downloader) => {
-    const data = await downloader.getMangaContent("ashita-dorobou");
+    const data = await downloader.fetchMangaContent("ashita-dorobou");
     fs.writeFileSync("test.json", JSON.stringify(data, null, 4));
     await downloader.destroy();
 });
