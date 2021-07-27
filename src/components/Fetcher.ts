@@ -194,7 +194,7 @@ class Fetcher extends Component {
                 aEls.forEach((el) => {
                     chaptersResult.push({
                         name: el.textContent?.trim() as string,
-                        link: (<HTMLAnchorElement>el).href.trim()
+                        link: (<HTMLAnchorElement>el).href?.trim()
                     });
                 });
                 if (isAVolumeMissing && i === 0) {
@@ -218,11 +218,11 @@ class Fetcher extends Component {
                      * so we check for webtoon. If it is, return webtoon. If it is something else, we
                      * can simply return 'notFound', because we don't know what type of volume it is.
                      */
-                    const volumeNumber = (splitted)
-                        ? parseFloat(splitted[1].trim()).toString()
-                        : (volumeAt.textContent?.trim().includes("Webtoon")
-                            ? "Webtoon"
-                            : "notFound");
+                    const volumeNumber = 
+                    (volumeAt.textContent?.trim().includes("Webtoon")
+                            ? "Webtoon": (splitted)
+                        ? parseFloat(splitted[1]?.trim()).toString()
+                        : "notFound");
                     const volume = {
                         name: volumeAt.textContent?.trim() as string,
                         number: volumeNumber,
