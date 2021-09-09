@@ -1,5 +1,4 @@
 import Downloader from "./components/Downloader";
-import fs from "fs";
 Downloader.launch({
     flags: {
         fast: false,
@@ -19,7 +18,7 @@ Downloader.launch({
         }
     }
 }).then(async (downloader) => {
-    const data = await downloader.fetchMangaContent("ashita-dorobou");
-    fs.writeFileSync("test.json", JSON.stringify(data, null, 4));
+    const data = await downloader.searchManga("one-piece");
+    console.log(data);
     await downloader.destroy();
 });
