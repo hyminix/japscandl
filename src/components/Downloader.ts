@@ -105,7 +105,7 @@ class Downloader extends Fetcher {
      */
     async downloadChapter(mangaName: string, chapter: number,
         options?: {
-            compression?: "cbr" | "pdf",
+            compression?: "cbr" /* | "pdf" */,
             onPage?: (attributes: MangaAttributes, totalPages: number) => void,
         }
     ): Promise<string> {
@@ -141,7 +141,7 @@ class Downloader extends Fetcher {
         start: number,
         end: number,
         options?: {
-            compression?: "cbr" | "pdf",
+            compression?: "cbr" /* | "pdf" */,
             onChapter?: (attributes: MangaAttributes, currentChapter: number, totalChapters: number) => void,
             onPage?: (attributes: MangaAttributes, totalPages: number) => void,
         }
@@ -179,7 +179,7 @@ class Downloader extends Fetcher {
     async downloadChapterFromLink(
         link: string,
         options?: {
-            compression?: "cbr" | "pdf",
+            compression?: "cbr" /* | "pdf" */,
             onPage?: (attributes: MangaAttributes, totalPages: number) => void,
         }
     ): Promise<string> {
@@ -220,7 +220,7 @@ class Downloader extends Fetcher {
                 );
             }
         }
-        const zipFunction = (compression === "cbr") ? compress.safeZip : (compression === "pdf") ? compress.safePdf : () => { };
+        const zipFunction = (compression === "cbr") ? compress.safeZip /* : (compression === "pdf") ? compress.safePdf */ : () => { } ;
         const downloadPath = this._getPathFrom(startAttributes);
         await zipFunction(this, startAttributes.manga, "chapitre", startAttributes.chapter, [downloadPath]);
         return downloadPath;
@@ -288,9 +288,9 @@ class Downloader extends Fetcher {
         }
         if (compression === "cbr") {
             await compress.safeZip(this, mangaName, "volume", volumeNumber.toString(), downloadLocations);
-        } else if (compression === "pdf") {
+        } /* else if (compression === "pdf") {
             await compress.pdfDirectories(downloadLocations, this._getZippedFilenameFrom(mangaName, volumeNumber.toString(), "volume", "pdf"))
-        }
+        } */
         return downloadLocations;
     }
 

@@ -2,7 +2,7 @@ import archiver from "archiver";
 import fs from "fs";
 import path from "path";
 import url from "./url";
-import PDFDocument from "pdfkit";
+// import PDFDocument from "pdfkit";
 import fsplus from "./fsplus";
 import Fetcher from "../components/Fetcher";
 import Component from "../components/Component";
@@ -21,7 +21,7 @@ function capitalize(str: string) {
 
 
 const compress = {
-    async zipFromJapscan(fetcher: Fetcher, mangaName: string, format: "chapitre" | "volume", type: "cbr" | "pdf", start: number, end?: number): Promise<void> {
+    async zipFromJapscan(fetcher: Fetcher, mangaName: string, format: "chapitre" | "volume", type: "cbr"/*   | "pdf" */, start: number, end?: number): Promise<void> {
         // if there an end, then it's a range, if there is none then it's just a number
         const toDownload = end ? { start: start, end: end } : start;
         const toZip: string[] = [];
@@ -63,14 +63,14 @@ const compress = {
     async safeZip(component: Component, mangaName: string, mangaType: string, mangaNumber: string, directories: string[]): Promise<void> {
         return compress.safeCompress(component, mangaName, mangaType, mangaNumber, directories, "cbr");
     },
-    async safePdf(component: Component, mangaName: string, mangaType: string, mangaNumber: string, directories: string[]): Promise<void> {
+    /* async safePdf(component: Component, mangaName: string, mangaType: string, mangaNumber: string, directories: string[]): Promise<void> {
         return compress.safeCompress(component, mangaName, mangaType, mangaNumber, directories, "pdf");
-    },
-    async safeCompress(component: Component, mangaName: string, mangaType: string, mangaNumber: string, directories: string[], compression: "cbr" | "pdf"): Promise<void> {
+    }, */
+    async safeCompress(component: Component, mangaName: string, mangaType: string, mangaNumber: string, directories: string[], compression: "cbr" /* | "pdf" */): Promise<void> {
         console.log(`Création du ${compression} ${mangaName} ${mangaType} ${mangaNumber}...`);
         const name = component._getZippedFilenameFrom(mangaName, mangaNumber, mangaType, compression);
         try {
-            const savePath = (compression === "cbr") ? await compress.zipDirectories(directories, name) : await compress.pdfDirectories(directories, name);
+            const savePath = /*(compression === "cbr") ? */ await compress.zipDirectories(directories, name) /* : await compress.pdfDirectories(directories, name) */;
             console.log(capitalize(compression) + " terminé! Il est enregistré à l'endroit \"" + savePath + "\" (" + bytesToSize(fs.statSync(savePath).size) + ")");
         } catch (e) {
             console.log(`Erreur pendant la création du ${compression} (${name}):`, e);
@@ -108,7 +108,7 @@ const compress = {
      * @param out pdf name
      * @returns pdf location
      */
-    async pdfDirectories(source: string[], out: string): Promise<string> {
+    /* async pdfDirectories(source: string[], out: string): Promise<string> {
         function getChapterNumber(filename: string): number {
             // isolate page
             const split = filename.split("_");
@@ -166,7 +166,7 @@ const compress = {
             });
         });
 
-    }
+    } */
 };
 
 export default compress;
