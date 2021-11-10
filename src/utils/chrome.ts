@@ -1,5 +1,6 @@
 import fs from "fs";
 import path from "path";
+import { execSync } from "child_process";
 
 const chrome = {
     getChromePath(path?: string): string {
@@ -28,6 +29,15 @@ const chrome = {
                 "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe",
                 "C:\\Program Files\\Microsoft\\Edge\\Application\\msedge.exe",
             ];
+        } else if (process.platform === "linux"){
+            const commandsToTry = ["which google-chrome-stable", "which chromium-browser", "which google-chrome"];
+            for (const command of commandsToTry) {
+                try {
+                    possiblePaths.push(execSync(command).toString().trim());
+                } catch (e){
+                    // ignore
+                }
+            }
         }
         for (const path of possiblePaths) {
             if (fs.existsSync(path)) {
