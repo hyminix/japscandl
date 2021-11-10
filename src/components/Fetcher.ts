@@ -1,6 +1,6 @@
 import { Browser, Page } from "puppeteer";
 import Component from "./Component";
-import { Chapter, ComponentFlags, MangaContent, MangaInfos, Volume } from "../utils/types";
+import { Chapter, ComponentFlags, MangaContent, MangaInfos, SearchInfos, Volume } from "../utils/types";
 import url from "../utils/url";
 import getBrowser from "../utils/browser";
 import chrome from "../utils/chrome";
@@ -139,7 +139,7 @@ class Fetcher extends Component {
      * @param search string to search on japscan
      * @returns json object containing results given by japscan
      */
-    async searchManga(search: string): Promise<{ mangakas: string, original_name: null | string, name: string, url: string }[]> {
+    async searchManga(search: string): Promise<SearchInfos[]> {
         const resp = await fetch('https://www.japscan.ws/live-search/', {
             method: 'POST',
             headers: {
@@ -157,7 +157,11 @@ class Fetcher extends Component {
             },
             body: 'search=' + search
         });
-        return resp.json();
+        const infos = await resp.json() as SearchInfos[];
+        infos.forEach((result) => {
+            result.japscan = result.url.split('/')[2];
+        });
+        return infos;
     }
     /**
      * this function gets all volumes and chapters from the manga page

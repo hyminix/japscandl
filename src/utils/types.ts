@@ -43,3 +43,11 @@ export type Chapter = {
     name: string,
     link: string,
 }
+
+export type SearchInfos = {
+    mangakas: string,
+    original_name: null | string,
+    name: string,
+    url: string,
+    japscan: string,
+}
