@@ -18,7 +18,8 @@ Downloader.launch({
         }
     }
 }).then(async (downloader) => {
-    const data = await downloader.searchManga("one-piece");
-    console.log(data);
+    const download = downloader.downloadImageFromLink('https://www.japscan.ws/lecture-en-ligne/one-piece/1030/');
+    download.on('start', (attributes) => console.log(attributes));
+    download.on('loaded', () => console.log("finished loading"));
     await downloader.destroy();
 });

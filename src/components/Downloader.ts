@@ -1,5 +1,6 @@
 import { Browser } from "puppeteer";
 import path from "path";
+import { EventEmitter } from "events";
 // utils
 import compress from "../utils/compress";
 import url from "../utils/url";
@@ -9,6 +10,7 @@ import Fetcher from "./Fetcher";
 import getBrowser from "../utils/browser";
 import chrome from "../utils/chrome";
 import { ComponentFlags, MangaAttributes } from "../utils/types";
+import { ImageDownloadEmit } from "../utils/emitTypes";
 
 
 /**
@@ -61,40 +63,45 @@ class Downloader extends Fetcher {
      * @param link link to download from
      * @returns if image could be downloaded
      */
-    async downloadImageFromLink(link: string): Promise<boolean> {
-        this._verbosePrint(console.log, "Téléchargement de l'image depuis le lien " + link);
-        const page = await this.createExistingPage(link, "normal");
-        const attributes = url.getAttributesFromLink(link);
-
-        let savePath = path.posix.join(
-            this.outputDirectory,
-            attributes.manga,
-            attributes.chapter
-        );
-        fsplus.createPath(savePath);
-        savePath = path.posix.join(savePath, manga.getFilenameFrom(attributes, this.imageFormat));
-        const popupCanvasSelector = "body > canvas";
-        const canvasElement = await this.waitForSelector(page, popupCanvasSelector);
-        if (!canvasElement) return false;
-        const dimensions = await canvasElement.evaluate((el) => {
-            // remove everything from page except canvas
-            document.querySelectorAll("div").forEach((el) => el.remove());
-            const width = el.getAttribute("width");
-            const height = el.getAttribute("height");
-            return {
-                width: (width) ? +width * 2 : 4096,
-                height: (height) ? +height * 2 : 2160,
-            }
-        });
-        await page.setViewport(dimensions);
-        this._verbosePrint(console.log, "Téléchargement de l'image...");
-        await canvasElement
-            .screenshot({
-                path: savePath,
-            })
-            .catch((e) => console.log("Erreur dans la capture de l'image", e));
-        page.close();
-        return true;
+    downloadImageFromLink(link: string): ImageDownloadEmit {
+        const eventEmitter = new ImageDownloadEmit();
+        (async () => {
+            const attributes = url.getAttributesFromLink(link);
+            eventEmitter.emit("start", attributes);
+            this._verbosePrint(console.log, "Téléchargement de l'image depuis le lien " + link);
+            const page = await this.createExistingPage(link, "normal");
+            eventEmitter.emit("loaded");
+            let savePath = path.posix.join(
+                this.outputDirectory,
+                attributes.manga,
+                attributes.chapter
+            );
+            fsplus.createPath(savePath);
+            savePath = path.posix.join(savePath, manga.getFilenameFrom(attributes, this.imageFormat));
+            const popupCanvasSelector = "body > canvas";
+            const canvasElement = await this.waitForSelector(page, popupCanvasSelector);
+            if (!canvasElement) return eventEmitter.emit("noimage", link);
+            const dimensions = await canvasElement.evaluate((el) => {
+                // remove everything from page except canvas
+                document.querySelectorAll("div").forEach((el) => el.remove());
+                const width = el.getAttribute("width");
+                const height = el.getAttribute("height");
+                return {
+                    width: (width) ? +width * 2 : 4096,
+                    height: (height) ? +height * 2 : 2160,
+                }
+            });
+            await page.setViewport(dimensions);
+            this._verbosePrint(console.log, "Téléchargement de l'image...");
+            await canvasElement
+                .screenshot({
+                    path: savePath,
+                })
+                .catch((e) => console.log("Erreur dans la capture de l'image", e));
+            page.close();
+            eventEmitter.emit("done", savePath);
+        })();
+        return eventEmitter;
     }
 
     /**
