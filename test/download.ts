@@ -18,11 +18,11 @@ describe("Downloader tests", function () {
         });
     });
     testDownloadOfManga("one-piece", 998, 11, { number: 4, height: 1300, width: 1790 }, "cbr");
-    testDownloadOfManga("jujutsu-kaisen", 152, 10, { number: 10, height: 1300, width: 897 }, "pdf");
+    testDownloadOfManga("jujutsu-kaisen", 152, 10, { number: 10, height: 1300, width: 897 },"cbr");
 });
 
 
-function testDownloadOfManga(mangaName: string, chapter: number, numberOfPages: number, pageToCheck: { number: number, height: number, width: number }, type: "cbr" | "pdf") {
+function testDownloadOfManga(mangaName: string, chapter: number, numberOfPages: number, pageToCheck: { number: number, height: number, width: number }, type: "cbr" /* | "pdf" */) {
     describe(`Downloading ${mangaName} chapter ${chapter}`, function () {
         this.timeout(1000 * 60 * 5); // 5 minutes
         this.afterEach("number of open chrome pages must be all about:blank", async function () {
