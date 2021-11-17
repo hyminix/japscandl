@@ -60,20 +60,23 @@ const compress = {
         }
     },
     //////////////////////////
-    async safeZip(component: Component, mangaName: string, mangaType: string, mangaNumber: string, directories: string[]): Promise<void> {
+    async safeZip(component: Component, mangaName: string, mangaType: string, mangaNumber: string, directories: string[]): Promise<{savePath: string, fileSize: number}> {
         return compress.safeCompress(component, mangaName, mangaType, mangaNumber, directories, "cbr");
     },
     /* async safePdf(component: Component, mangaName: string, mangaType: string, mangaNumber: string, directories: string[]): Promise<void> {
         return compress.safeCompress(component, mangaName, mangaType, mangaNumber, directories, "pdf");
     }, */
-    async safeCompress(component: Component, mangaName: string, mangaType: string, mangaNumber: string, directories: string[], compression: "cbr" /* | "pdf" */): Promise<void> {
+    async safeCompress(component: Component, mangaName: string, mangaType: string, mangaNumber: string, directories: string[], compression: "cbr" /* | "pdf" */): Promise<{savePath: string, fileSize: number}> {
         console.log(`Création du ${compression} ${mangaName} ${mangaType} ${mangaNumber}...`);
         const name = component._getZippedFilenameFrom(mangaName, mangaNumber, mangaType, compression);
         try {
             const savePath = /*(compression === "cbr") ? */ await compress.zipDirectories(directories, name) /* : await compress.pdfDirectories(directories, name) */;
-            console.log(capitalize(compression) + " terminé! Il est enregistré à l'endroit \"" + savePath + "\" (" + bytesToSize(fs.statSync(savePath).size) + ")");
+            const fileSize = fs.statSync(savePath).size;
+            console.log(capitalize(compression) + " terminé! Il est enregistré à l'endroit \"" + savePath + "\" (" + bytesToSize(fileSize) + ")");
+            return {savePath, fileSize};
         } catch (e) {
             console.log(`Erreur pendant la création du ${compression} (${name}):`, e);
+            return {savePath: "", fileSize: 0};
         }
     },
     /**

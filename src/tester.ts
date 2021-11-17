@@ -1,4 +1,5 @@
 import Downloader from "./components/Downloader";
+import { ChapterDownloadEmit, ImageDownloadEmit } from "./utils/emitTypes";
 Downloader.launch({
     flags: {
         fast: false,
@@ -18,8 +19,12 @@ Downloader.launch({
         }
     }
 }).then(async (downloader) => {
-    const download = downloader.downloadImageFromLink('https://www.japscan.ws/lecture-en-ligne/one-piece/1030/');
-    download.on('start', (attributes) => console.log(attributes));
-    download.on('loaded', () => console.log("finished loading"));
-    await downloader.destroy();
+    await downloader.downloadChapterFromLink('https://www.japscan.ws/lecture-en-ligne/one-piece/1030/', (events: ChapterDownloadEmit) => {
+        events.on('start', (attributes) => console.log(attributes));
+        events.on('noimage', (links: string[]) => console.log("No images at " + links));
+        events.on('done', (path: string) => {
+            console.log("Image is at " + path);
+            downloader.destroy();
+        });
+    });
 });

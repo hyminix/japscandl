@@ -9,17 +9,13 @@ import Fetcher from "./Fetcher";
 import getBrowser from "../utils/browser";
 import chrome from "../utils/chrome";
 import { ComponentFlags, MangaAttributes } from "../utils/types";
-import { ImageDownloadEmit } from "../utils/emitTypes";
+import { ChapterDownloadEmit, ChaptersDownloadEmit, ImageDownloadEmit, VolumeDownloadEmit } from "../utils/emitTypes";
 
 
 /**
  * Japscan downloader class, usually used with an interface
  */
 class Downloader extends Fetcher {
-    onPage: (attributes: MangaAttributes,
-        totalPages: number) => void = () => { };
-    onChapter: (attributes: MangaAttributes, currentChapter: number, totalChapters: number) => void = () => { };
-    onVolume: (mangaName: string, current: number, total: number) => void = () => { };
     imageFormat: "jpg" | "png";
 
     /**
@@ -62,63 +58,54 @@ class Downloader extends Fetcher {
      * @param link link to download from
      * @returns if image could be downloaded
      */
-    downloadImageFromLink(link: string): ImageDownloadEmit {
+    async downloadImageFromLink(link: string, callback?: (events: ImageDownloadEmit) => void): Promise<void> {
         const eventEmitter = new ImageDownloadEmit();
-        (async () => {
-            const attributes = url.getAttributesFromLink(link);
-            eventEmitter.emit("start", attributes);
-            this._verbosePrint(console.log, "Téléchargement de l'image depuis le lien " + link);
-            const page = await this.createExistingPage(link, "normal");
-            eventEmitter.emit("loaded");
-            let savePath = path.posix.join(
-                this.outputDirectory,
-                attributes.manga,
-                attributes.chapter
-            );
-            fsplus.createPath(savePath);
-            savePath = path.posix.join(savePath, manga.getFilenameFrom(attributes, this.imageFormat));
-            const popupCanvasSelector = "body > canvas";
-            const canvasElement = await this.waitForSelector(page, popupCanvasSelector);
-            if (!canvasElement) return eventEmitter.emit("noimage", link);
-            const dimensions = await canvasElement.evaluate((el) => {
-                // remove everything from page except canvas
-                document.querySelectorAll("div").forEach((el) => el.remove());
-                const width = el.getAttribute("width");
-                const height = el.getAttribute("height");
-                return {
-                    width: (width) ? +width * 2 : 4096,
-                    height: (height) ? +height * 2 : 2160,
-                }
-            });
-            await page.setViewport(dimensions);
-            this._verbosePrint(console.log, "Téléchargement de l'image...");
-            await canvasElement
-                .screenshot({
-                    path: savePath,
-                })
-                .catch((e) => console.log("Erreur dans la capture de l'image", e));
-            page.close();
-            eventEmitter.emit("done", savePath);
-        })();
-        return eventEmitter;
+        if (callback) callback(eventEmitter);
+        const attributes = url.getAttributesFromLink(link);
+        eventEmitter.emit("start", attributes, link);
+        this._verbosePrint(console.log, "Téléchargement de l'image depuis le lien " + link);
+        const page = await this.createExistingPage(link, "normal");
+        let savePath = path.posix.join(
+            this.outputDirectory,
+            attributes.manga,
+            attributes.chapter
+        );
+        fsplus.createPath(savePath);
+        savePath = path.posix.join(savePath, manga.getFilenameFrom(attributes, this.imageFormat));
+        const popupCanvasSelector = "body > canvas";
+        const canvasElement = await this.waitForSelector(page, popupCanvasSelector);
+        if (!canvasElement) {
+            eventEmitter.emit("noimage", link);
+            return;
+        }
+        const dimensions = await canvasElement.evaluate((el) => {
+            // remove everything from page except canvas
+            document.querySelectorAll("div").forEach((el) => el.remove());
+            const width = el.getAttribute("width");
+            const height = el.getAttribute("height");
+            return {
+                width: (width) ? +width * 2 : 4096,
+                height: (height) ? +height * 2 : 2160,
+            }
+        });
+        await page.setViewport(dimensions);
+        this._verbosePrint(console.log, "Téléchargement de l'image...");
+        await canvasElement
+            .screenshot({
+                path: savePath,
+            })
+            .catch((e) => console.log("Erreur dans la capture de l'image", e));
+        page.close();
+        eventEmitter.emit("done", savePath);
     }
 
-    /**
-     * @param mangaName manga name
-     * @param chapter number of chapter
-     * @param compression defaults as true, if true the downloaded images are compressed as a cbr after downloading
-     * @returns download location
-     */
     async downloadChapter(mangaName: string, chapter: number,
         options?: {
             compression?: "cbr" /* | "pdf" */,
-            onPage?: (attributes: MangaAttributes, totalPages: number) => void,
+            callback: (events: ChapterDownloadEmit) => void;
         }
     ): Promise<string> {
-        const { compression, onPage } = options ?? {};
-        this._verbosePrint(console.log,
-            "Téléchargement du chapitre " + chapter + " de " + mangaName
-        );
+        const { compression, callback } = options ?? {};
         const mangaNameStats = (await this.fetchStats(mangaName)).name;
         if (mangaName !== mangaNameStats) {
             console.log(
@@ -132,7 +119,7 @@ class Downloader extends Fetcher {
         }
         mangaName = mangaNameStats;
         const link = url.buildLectureLink(mangaName, chapter.toString(), this);
-        return this.downloadChapterFromLink(link, { compression, onPage });
+        return this.downloadChapterFromLink(link, { compression, callback });
     }
 
     /**
@@ -148,87 +135,63 @@ class Downloader extends Fetcher {
         end: number,
         options?: {
             compression?: "cbr" /* | "pdf" */,
-            onChapter?: (attributes: MangaAttributes, currentChapter: number, totalChapters: number) => void,
-            onPage?: (attributes: MangaAttributes, totalPages: number) => void,
+            callback?: (events: ChaptersDownloadEmit) => void,
         }
-    ): Promise<string[]> {
-        const { compression, onChapter, onPage } = options ?? {};
-        this._verbosePrint(console.log,
-            "Téléchargement des chapitres de " +
-            mangaName +
-            " de " +
-            start +
-            " à " +
-            end
-        );
+    ): Promise<void> {
+        const { compression, callback } = options ?? {};
+        const eventEmitter = new ChaptersDownloadEmit();
+        if(callback) callback(eventEmitter);
+        eventEmitter.emit('start', mangaName, start, end);
         const chapterDownloadLocations: Array<string> = [];
         const linksToDownload = await this.fetchChapterLinksBetweenRange(
             mangaName,
             start,
             end
         );
-        this._verbosePrint(console.log, "Liens à télécharger: ", linksToDownload);
         let i = 0;
-        (onChapter ?? this.onChapter)({ manga: mangaName, chapter: start.toString(), page: '0' }, i++, linksToDownload.length);
         for (const link of linksToDownload) {
-            chapterDownloadLocations.push(await this.downloadChapterFromLink(link, { compression, onPage }));
-            (onChapter ?? this.onChapter)(url.getAttributesFromLink(link), i++, linksToDownload.length);
+            const linkAttributes = url.getAttributesFromLink(link);
+            eventEmitter.emit('startChapter', linkAttributes, i++, linksToDownload.length);
+            chapterDownloadLocations.push(await this.downloadChapterFromLink(link, {
+                compression,
+                callback: (events: ChapterDownloadEmit) => {
+                    events.on('page', (attributes, total) => eventEmitter.emit('page', attributes, total))
+                }
+            }));
+            eventEmitter.emit('endChapter', linkAttributes, i, linksToDownload.length);
         }
-        return chapterDownloadLocations;
+        eventEmitter.emit('done', chapterDownloadLocations);
     }
 
-    /**
-     * @param link link to download from
-     * @param compression defaults as true, if true the downloaded images are compressed as a cbr after downloading
-     * @returns chapter's download location
-     */
-    async downloadChapterFromLink(
+ async downloadChapterFromLink(
         link: string,
         options?: {
             compression?: "cbr" /* | "pdf" */,
-            onPage?: (attributes: MangaAttributes, totalPages: number) => void,
+            callback?: (events: ChapterDownloadEmit) => void,
         }
     ): Promise<string> {
-        const { compression, onPage } = options ?? {};
-        this._verbosePrint(console.log, "Téléchargement du chapitre depuis le lien " + link);
+        const eventEmitter = new ChapterDownloadEmit();
+        const { compression } = options ?? {};
         const startAttributes = url.getAttributesFromLink(link);
         const numberOfPages = await this.fetchNumberOfPagesInChapter(link);
-        this._verbosePrint(console.log, "Pages dans le chapitre:", numberOfPages);
-
+        eventEmitter.emit("start", startAttributes, link, numberOfPages);
         const couldNotDownload: string[] = [];
-        (onPage ?? this.onPage)(startAttributes, numberOfPages);
         for (let i = 1; i <= numberOfPages; i++) {
             const pageLink = `${link}${i}.html`;
-            const isDownloaded = await this.downloadImageFromLink(pageLink);
-            if (!isDownloaded) {
-                couldNotDownload.push(pageLink);
-            }
-            (onPage ?? this.onPage)(url.getAttributesFromLink(pageLink), numberOfPages);
+            await this.downloadImageFromLink(pageLink, (events) => {
+                events.on('noimage', (link) => couldNotDownload.push(link));
+            });
+            eventEmitter.emit('page', url.getAttributesFromLink(pageLink), numberOfPages);
 
         }
 
         if (couldNotDownload.length > 0) {
-            if (couldNotDownload.length > 1) {
-                console.log(
-                    "Les chapitres aux liens suivants n'ont pas pu être téléchargé:",
-                    couldNotDownload
-                );
-                console.log(
-                    "Peut être que ces liens n'ont pas d'image. Veuillez vérifier."
-                );
-            } else {
-                console.log(
-                    "Le chapitre au lien suivant n'a pas pu être téléchargé:",
-                    couldNotDownload[0]
-                );
-                console.log(
-                    "Peut être que ce lien n'a pas d'image. Veuillez vérifier."
-                );
-            }
+            eventEmitter.emit('noimage', couldNotDownload);
         }
         const zipFunction = (compression === "cbr") ? compress.safeZip /* : (compression === "pdf") ? compress.safePdf */ : () => { };
         const downloadPath = this._getPathFrom(startAttributes);
         await zipFunction(this, startAttributes.manga, "chapitre", startAttributes.chapter, [downloadPath]);
+        eventEmitter.emit('done', downloadPath);
         return downloadPath;
     }
 
@@ -244,46 +207,33 @@ class Downloader extends Fetcher {
         volumeNumber: number,
         options?: {
             compression?: "cbr" /* | "pdf" */,
-            onChapter?: (attributes: MangaAttributes, currentChapter: number, totalChapters: number) => void,
-            onPage?: (attributes: MangaAttributes, totalPages: number) => void,
+            callback?: (events: VolumeDownloadEmit) => void;
         }
-    ): Promise<string[]> {
-        const { compression, onChapter, onPage } = options ?? {};
-        console.log(
-            "Téléchargement du volume " + volumeNumber + " de " + mangaName
-        );
-        const stats = await this.fetchStats(mangaName);
-        if (stats.name !== mangaName) {
-            console.log(
-                "Le manga " +
-                mangaName +
-                " est appelé " +
-                stats.name +
-                " sur japscan. japdl va le télécharger avec le nom " +
-                stats.name
-            );
-            mangaName = stats.name;
-        }
-        this._verbosePrint(console.log, "Récupération des informations sur le volume...");
-
+    ): Promise<void> {
+        const eventEmitter = new VolumeDownloadEmit();
+        const { compression, callback } = options ?? {};
+        if(callback) callback(eventEmitter);
+        eventEmitter.emit('start', mangaName, volumeNumber);
         const toDownloadFrom = await this.fetchVolumeChapters(
             volumeNumber,
             mangaName
         );
 
-        this._verbosePrint(console.log, "Récupéré");
+        eventEmitter.emit('chapters', toDownloadFrom);
+
         const waiters = [];
-        const downloadLocations: Array<string> = [];
+        const downloadLocations: string[] = [];
         let i = 0;
-        (onChapter ?? this.onChapter)({ manga: mangaName, chapter: volumeNumber.toString(), page: '0' }, i++, toDownloadFrom.length);
         for (const link of toDownloadFrom) {
+            const linkAttributes = url.getAttributesFromLink(link);
+            eventEmitter.emit('startChapter', linkAttributes, i++, toDownloadFrom.length);
             // should return path of download
-            const chapterPromise = this.downloadChapterFromLink(link, { onPage });
+            const chapterPromise = this.downloadChapterFromLink(link, { callback: (events) => events.on('page', (attributes, total) => eventEmitter.emit('page', attributes, total)) });
             if (this.fast) {
                 waiters.push(chapterPromise);
             } else {
                 downloadLocations.push(await chapterPromise);
-                (onChapter ?? this.onChapter)(url.getAttributesFromLink(link), i++, toDownloadFrom.length);
+                eventEmitter.emit('endChapter', linkAttributes, i, toDownloadFrom.length);
             }
         }
 
@@ -293,11 +243,13 @@ class Downloader extends Fetcher {
             }
         }
         if (compression === "cbr") {
+            // TODO: begin zip
             await compress.safeZip(this, mangaName, "volume", volumeNumber.toString(), downloadLocations);
+            // TODO: end zip with size, path
         } /* else if (compression === "pdf") {
             await compress.pdfDirectories(downloadLocations, this._getZippedFilenameFrom(mangaName, volumeNumber.toString(), "volume", "pdf"))
         } */
-        return downloadLocations;
+        eventEmitter.emit('done', downloadLocations);
     }
 
     /**
