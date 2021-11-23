@@ -17,7 +17,6 @@ const scripts = {
  */
 class Component {
     WEBSITE = "https://www.japscan.ws";
-    verbose: boolean;
     browser: Browser;
     fast: boolean;
     timeout: number;
@@ -33,7 +32,6 @@ class Component {
     }) {
         this.browser = browser;
         this.outputDirectory = options?.outputDirectory ?? "manga";
-        this.verbose = options?.flags?.verbose ?? false;
         this.fast = options?.flags?.fast ?? false;
         this.timeout = (options?.flags?.timeout) ? options?.flags?.timeout * 1000 : 60 * 1000;
     }
@@ -45,7 +43,6 @@ class Component {
      */
     async createExistingPage(link: string, script?: "normal" | "webtoon"): Promise<Page> {
         const page = await this.browser.newPage();
-        this._verbosePrint(console.log, "Création de la page " + link + ((script) ? " avec un script" : ""));
         await this._goToExistingPage(page, link, script);
         return page;
     }
@@ -70,7 +67,6 @@ class Component {
         if (await this._isJapscan404(response)) {
             throw new Error("La page " + link + " n'existe pas (404)");
         }
-        this._verbosePrint(console.log, "Création de la page " + link);
     }
 
     async _safePageGoto(page: Page, link: string): Promise<Response | null> {
@@ -132,20 +128,6 @@ class Component {
     _getZippedFilenameFrom(manga: string, number: string, type: string, extension: string): string {
         return path.resolve(`${this.outputDirectory}/${manga}/${manga}-${type}-${number}.${extension}`);
     }
-    /**
-     * Only prints msg with printFunction if this.verbose is true
-     * @param printFunction function used to print msg param
-     * @param msg msg param to print
-     */
-    protected _verbosePrint(printFunction: unknown, ...msg: unknown[]): void {
-        if (this.verbose) {
-            if (printFunction instanceof Function) {
-                printFunction(...msg);
-            } else {
-                throw new Error("verbosePrint used with nonFunction parameter");
-            }
-        }
-    }
 
     static async launch(options?: {
         flags?: ComponentFlags,
@@ -158,15 +140,12 @@ class Component {
 
     protected waitForSelector(page: Page, selector: string): Promise<ElementHandle<Element> | false> {
         return new Promise((resolve) => {
-            this._verbosePrint(console.log, "Attente du script de page...");
             page.waitForSelector(selector)
                 .then((element) => {
                     resolve(element);
-                    this._verbosePrint(console.log, "Attente terminée");
                 })
                 .catch(() => {
                     resolve(false);
-                    this._verbosePrint(console.log, "L'élement '" + selector + "' n'est pas apparu");
                 });
         })
     }

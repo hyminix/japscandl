@@ -25,7 +25,6 @@ class Fetcher extends Component {
     async fetchStats(
         mangaName: string
     ): Promise<MangaInfos> {
-        this._verbosePrint(console.log, "Récupération des infos du manga " + mangaName);
         const data = await this.fetchMangaContent(mangaName);
         // extract chapter number from last chapter link attributes
         const lastVolume = data.volumes[data.volumes.length - 1];
@@ -48,12 +47,6 @@ class Fetcher extends Component {
         volumeNumber: number,
         mangaName: string
     ): Promise<Array<string>> {
-        this._verbosePrint(console.log,
-            "Récupération des chapitres du volume " +
-            volumeNumber +
-            " du manga " +
-            mangaName
-        );
         const data = await this.fetchMangaContent(mangaName);
         const volume = data.volumes.find((volume) => +volume.number === volumeNumber);
         if (volume === undefined) {
@@ -118,9 +111,6 @@ class Fetcher extends Component {
      * @returns number of pages in chapter
      */
     async fetchNumberOfPagesInChapter(link: string): Promise<number> {
-        this._verbosePrint(console.log,
-            "Recupération du nombre de pages pour le chapitre " + link
-        );
         const startPage = await this.createExistingPage(link);
         const chapterSelectSelector = "div.div-select:nth-child(2) > .ss-main > .ss-content > .ss-list";
         const chapterSelect = await this.waitForSelector(startPage, chapterSelectSelector);
@@ -129,7 +119,6 @@ class Fetcher extends Component {
             return await this.fetchNumberOfPagesInChapter(link);
         }
         const numberOfPages = await chapterSelect.evaluate((el) => el.childElementCount);
-        this._verbosePrint(console.log, "Nombre de page(s): " + numberOfPages);
         await startPage.close();
         return numberOfPages;
     }

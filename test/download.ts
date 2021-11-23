@@ -8,14 +8,7 @@ let downloader: Downloader;
 describe("Downloader tests", function () {
     it("Browser instantiation", async function () {
         this.timeout(0);
-        downloader = await Downloader.launch({
-            onEvent: {
-                onPage: (attributes, totalPages) => {
-                    const { manga, chapter, page } = attributes;
-                    console.log(`\t${manga} ${chapter} ${page}/${totalPages}`);
-                }
-            },
-        });
+        downloader = await Downloader.launch();
     });
     testDownloadOfManga("one-piece", 998, 11, { number: 4, height: 1300, width: 1790 }, "cbr");
     testDownloadOfManga("jujutsu-kaisen", 152, 10, { number: 10, height: 1300, width: 897 },"cbr");
