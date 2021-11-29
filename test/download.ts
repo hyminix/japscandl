@@ -83,7 +83,7 @@ function testDownloadOfManga(mangaName: string, chapter: number, numberOfPages: 
 
         it(`Page ${pageToCheck.number} must have correct size`, function () {
             const { height, width } = sizeOf(
-                path.join(__dirname, `../../manga/${mangaName}/${chapter}/${chapter}_${pageToCheck.number}.png`)
+                path.join(__dirname, `../../manga/${mangaName}/${chapter}/${chapter}_${pageToCheck.number}.${downloader.imageFormat}`)
             );
             const errors: string[] = [];
             if (height !== pageToCheck.height) {

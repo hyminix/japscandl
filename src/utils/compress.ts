@@ -6,21 +6,26 @@ import url from "./url";
 import fsplus from "./fsplus";
 import Fetcher from "../components/Fetcher";
 import Component from "../components/Component";
+import { CompressEmit } from "./emitTypes";
 
-function bytesToSize(bytes: number) {
+export function bytesToSize(bytes: number): string {
     const sizes = ['octet', 'Ko', 'Mo', 'Go', 'To'];
     if (bytes == 0) return '0 ' + sizes[0];
     const i = Math.floor(Math.log(bytes) / Math.log(1024));
     return Math.round(bytes / Math.pow(1024, i)) + ' ' + sizes[i];
 }
 
-function capitalize(str: string) {
-    return str[0].toUpperCase() + str.slice(1);
-}
-
-
 
 const compress = {
+    /**
+     * 
+     * @param fetcher Fetcher to use
+     * @param mangaName manga name
+     * @param format "chapitre" or "volume"
+     * @param type compression type
+     * @param start start type
+     * @param end optional, end type if range
+     */
     async zipFromJapscan(fetcher: Fetcher, mangaName: string, format: "chapitre" | "volume", type: "cbr"/*   | "pdf" */, start: number, end?: number): Promise<void> {
         // if there an end, then it's a range, if there is none then it's just a number
         const toDownload = end ? { start: start, end: end } : start;
@@ -60,22 +65,24 @@ const compress = {
         }
     },
     //////////////////////////
-    async safeZip(component: Component, mangaName: string, mangaType: string, mangaNumber: string, directories: string[]): Promise<{savePath: string, fileSize: number}> {
-        return compress.safeCompress(component, mangaName, mangaType, mangaNumber, directories, "cbr");
+    async safeZip(component: Component, mangaName: string, mangaType: string, mangaNumber: string, directories: string[], callback?: (events: CompressEmit)): Promise<{savePath: string, fileSize: number}> {
+        return compress.safeCompress(component, mangaName, mangaType, mangaNumber, directories, "cbr", callback);
     },
     /* async safePdf(component: Component, mangaName: string, mangaType: string, mangaNumber: string, directories: string[]): Promise<void> {
         return compress.safeCompress(component, mangaName, mangaType, mangaNumber, directories, "pdf");
     }, */
-    async safeCompress(component: Component, mangaName: string, mangaType: string, mangaNumber: string, directories: string[], compression: "cbr" /* | "pdf" */): Promise<{savePath: string, fileSize: number}> {
-        console.log(`Création du ${compression} ${mangaName} ${mangaType} ${mangaNumber}...`);
+    async safeCompress(component: Component, mangaName: string, mangaType: string, mangaNumber: string, directories: string[], compression: "cbr" /* | "pdf" */, callback?: (events: CompressEmit) => void): Promise<{savePath: string, fileSize: number}> {
+        const eventEmitter = new CompressEmit();
+        if(callback) callback(eventEmitter);
+        eventEmitter.emit("start", mangaName, compression, mangaType, mangaNumber);
         const name = component._getZippedFilenameFrom(mangaName, mangaNumber, mangaType, compression);
         try {
             const savePath = /*(compression === "cbr") ? */ await compress.zipDirectories(directories, name) /* : await compress.pdfDirectories(directories, name) */;
             const fileSize = fs.statSync(savePath).size;
-            console.log(capitalize(compression) + " terminé! Il est enregistré à l'endroit \"" + savePath + "\" (" + bytesToSize(fileSize) + ")");
+            eventEmitter.emit("done", mangaName, compression, mangaType, mangaNumber, savePath, fileSize);
             return {savePath, fileSize};
         } catch (e) {
-            console.log(`Erreur pendant la création du ${compression} (${name}):`, e);
+            eventEmitter.emit("done", mangaName, compression, mangaType, mangaNumber, "", 0);
             return {savePath: "", fileSize: 0};
         }
     },

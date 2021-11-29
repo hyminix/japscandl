@@ -14,6 +14,8 @@ export interface ChapterDownloadEmit {
     on(event: "start", arg: (attributes: MangaAttributes, link: string, pages: number) => void): this;
     on(event: "page", arg: (attributes: MangaAttributes, totalPages: number, savePath: string) => void): this;
     on(event: "noimage", arg: (attributes: MangaAttributes, links: string[]) => void): this;
+    on(event: "compressStart", arg: (attributes: MangaAttributes, links: string[]) => void): this;
+    on(event: "compressEnd", arg: (attributes: MangaAttributes, links: string[]) => void): this;
     on(event: "done", arg: (attributes: MangaAttributes, downloadPath: string) => void): this;
 }
 
@@ -55,3 +57,10 @@ export interface VolumesDownloadEmit {
 }
 
 export class VolumesDownloadEmit extends EventEmitter { }
+
+export interface CompressEmit {
+    on(event: "start", arg: (manga: string, compression: "cbr" /* | "pdf" */, type: "volume" | "chapitre",  typeNumber: number) => void): this;
+    on(event: "done", arg: (manga: string, compression: "cbr" /* | "pdf" */, type: "volume" | "chapitre",  typeNumber: number, savePath: string, fileSize: number) => void): this;
+}
+
+export class CompressEmit extends EventEmitter { }

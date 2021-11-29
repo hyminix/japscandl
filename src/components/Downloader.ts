@@ -9,7 +9,7 @@ import Fetcher from "./Fetcher";
 import getBrowser from "../utils/browser";
 import chrome from "../utils/chrome";
 import { ComponentFlags } from "../utils/types";
-import { ChapterDownloadEmit, ChaptersDownloadEmit, ImageDownloadEmit, VolumeDownloadEmit, VolumesDownloadEmit } from "../utils/emitTypes";
+import { ChapterDownloadEmit, ChaptersDownloadEmit, CompressEmit, ImageDownloadEmit, VolumeDownloadEmit, VolumesDownloadEmit } from "../utils/emitTypes";
 
 
 /**
@@ -153,7 +153,7 @@ class Downloader extends Fetcher {
         const numberOfPages = await this.fetchNumberOfPagesInChapter(link);
         eventEmitter.emit("start", startAttributes, link, numberOfPages);
         for (let i = 1; i <= numberOfPages; i++) {
-            const pageLink = `${link}${i}.html`;
+            const pageLink = (i === 1) ? link : `${link}${i}.html`;
             await this.downloadImageFromLink(pageLink, (events) => {
                 events.on('noimage', (attributes, link) => {
                     eventEmitter.emit('noimage', attributes, link);
@@ -167,7 +167,9 @@ class Downloader extends Fetcher {
 
         const zipFunction = (compression === "cbr") ? compress.safeZip /* : (compression === "pdf") ? compress.safePdf */ : () => { };
         const downloadPath = this._getPathFrom(startAttributes);
-        await zipFunction(this, startAttributes.manga, "chapitre", startAttributes.chapter, [downloadPath]);
+        await zipFunction(this, startAttributes.manga, "chapitre", startAttributes.chapter, [downloadPath], (events: CompressEmit) => {
+            events.on("start", ())
+        });
         eventEmitter.emit('done', startAttributes, downloadPath);
     }
 
