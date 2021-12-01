@@ -9,7 +9,7 @@ import Fetcher from "./Fetcher";
 import getBrowser from "../utils/browser";
 import chrome from "../utils/chrome";
 import { ComponentFlags } from "../utils/types";
-import { ChapterDownloadEmit, ChaptersDownloadEmit, CompressEmit, ImageDownloadEmit, VolumeDownloadEmit, VolumesDownloadEmit } from "../utils/emitTypes";
+import { ChapterDownloadEmit, ChaptersDownloadEmit, ImageDownloadEmit, VolumeDownloadEmit, VolumesDownloadEmit } from "../utils/emitTypes";
 
 
 /**
@@ -122,7 +122,7 @@ class Downloader extends Fetcher {
         let i = 0;
         for (const link of linksToDownload) {
             const linkAttributes = url.getAttributesFromLink(link);
-            eventEmitter.emit('startChapter', linkAttributes, i++, linksToDownload.length);
+            eventEmitter.emit('startchapter', linkAttributes, i++, linksToDownload.length);
             await this.downloadChapterFromLink(link, {
                 compression,
                 callback: (events: ChapterDownloadEmit) => {
@@ -134,7 +134,7 @@ class Downloader extends Fetcher {
                     });
                 }
             });
-            eventEmitter.emit('endChapter', linkAttributes, i, linksToDownload.length);
+            eventEmitter.emit('endchapter', linkAttributes, i, linksToDownload.length);
         }
         eventEmitter.emit('done', chapterDownloadLocations);
     }
@@ -167,9 +167,9 @@ class Downloader extends Fetcher {
 
         const zipFunction = (compression === "cbr") ? compress.safeZip /* : (compression === "pdf") ? compress.safePdf */ : () => { };
         const downloadPath = this._getPathFrom(startAttributes);
-        await zipFunction(this, startAttributes.manga, "chapitre", startAttributes.chapter, [downloadPath], (events: CompressEmit) => {
-            events.on("start", ())
-        });
+        eventEmitter.emit("compressing", startAttributes, downloadPath);
+        const compressStats = await zipFunction(this, startAttributes.manga, "chapitre", startAttributes.chapter, [downloadPath]);
+        eventEmitter.emit("compressed", startAttributes, downloadPath, compressStats);
         eventEmitter.emit('done', startAttributes, downloadPath);
     }
 
@@ -207,7 +207,7 @@ class Downloader extends Fetcher {
             const chapterPromise = this.downloadChapterFromLink(link, {
                 callback: (events) => {
                     events.on("start", (attributes, link, pages) => {
-                        eventEmitter.emit("startChapter", attributes, pages, toDownloadFrom.length)
+                        eventEmitter.emit("startchapter", attributes, pages, toDownloadFrom.length)
                     });
                     events.on('page', (attributes, total) => {
                         eventEmitter.emit('page', attributes, total)
@@ -216,7 +216,7 @@ class Downloader extends Fetcher {
                         eventEmitter.emit('noimage', attributes, links);
                     })
                     events.on("done", (attributes, location) => {
-                        eventEmitter.emit('endChapter', attributes, i, toDownloadFrom.length);
+                        eventEmitter.emit('endchapter', attributes, i, toDownloadFrom.length);
                         downloadLocations.push(location);
                     });
                 }
@@ -273,16 +273,16 @@ class Downloader extends Fetcher {
                 compression,
                 callback: (events) => {
                     events.on("start", (manga, volume) => {
-                        eventEmitter.emit('startVolume', manga, volume, volumeIndex, total);
+                        eventEmitter.emit('startvolume', manga, volume, volumeIndex, total);
                     })
                     events.on("chapters", (chapters) => {
                         eventEmitter.emit("chapters", volumeNumber, volumeIndex, chapters);
                     });
-                    events.on("startChapter", (attributes, pages) => {
-                        eventEmitter.emit('startChapter', attributes, pages);
+                    events.on("startchapter", (attributes, pages) => {
+                        eventEmitter.emit('startchapter', attributes, pages);
                     });
-                    events.on("endChapter", (attributes, pages) => {
-                        eventEmitter.emit('endChapter', attributes, pages);
+                    events.on("endchapter", (attributes, pages) => {
+                        eventEmitter.emit('endchapter', attributes, pages);
                     })
                     events.on("noimage", (attributes, links) => {
                         eventEmitter.emit('noimage', attributes, links);
@@ -293,7 +293,7 @@ class Downloader extends Fetcher {
                     })
                     events.on("done", (manga, volume, downloadLocations) => {
                         volumeDownloadLocations.push(downloadLocations);
-                        eventEmitter.emit('endVolume', manga, volumeIndex, total, downloadLocations);
+                        eventEmitter.emit('endvolume', manga, volumeIndex, total, downloadLocations);
                     });
                 }
             });

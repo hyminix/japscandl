@@ -23,7 +23,7 @@ const url = {
             // This prevents error on a /manga/ page
             page:
                 linkSplit[6] === "" || linkSplit[6] === undefined
-                    ? "0"
+                    ? "1"
                     : linkSplit[6].replace(".html", ""),
         };
         return attributes;

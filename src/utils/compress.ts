@@ -6,7 +6,6 @@ import url from "./url";
 import fsplus from "./fsplus";
 import Fetcher from "../components/Fetcher";
 import Component from "../components/Component";
-import { CompressEmit } from "./emitTypes";
 
 export function bytesToSize(bytes: number): string {
     const sizes = ['octet', 'Ko', 'Mo', 'Go', 'To'];
@@ -15,10 +14,14 @@ export function bytesToSize(bytes: number): string {
     return Math.round(bytes / Math.pow(1024, i)) + ' ' + sizes[i];
 }
 
+export type CompressStats = {
+    path: string;
+    size: number;
+}
+
 
 const compress = {
     /**
-     * 
      * @param fetcher Fetcher to use
      * @param mangaName manga name
      * @param format "chapitre" or "volume"
@@ -65,25 +68,20 @@ const compress = {
         }
     },
     //////////////////////////
-    async safeZip(component: Component, mangaName: string, mangaType: string, mangaNumber: string, directories: string[], callback?: (events: CompressEmit)): Promise<{savePath: string, fileSize: number}> {
-        return compress.safeCompress(component, mangaName, mangaType, mangaNumber, directories, "cbr", callback);
+    async safeZip(component: Component, mangaName: string, mangaType: string, mangaNumber: string, directories: string[]): Promise<CompressStats> {
+        return compress.safeCompress(component, mangaName, mangaType, mangaNumber, directories, "cbr");
     },
     /* async safePdf(component: Component, mangaName: string, mangaType: string, mangaNumber: string, directories: string[]): Promise<void> {
         return compress.safeCompress(component, mangaName, mangaType, mangaNumber, directories, "pdf");
     }, */
-    async safeCompress(component: Component, mangaName: string, mangaType: string, mangaNumber: string, directories: string[], compression: "cbr" /* | "pdf" */, callback?: (events: CompressEmit) => void): Promise<{savePath: string, fileSize: number}> {
-        const eventEmitter = new CompressEmit();
-        if(callback) callback(eventEmitter);
-        eventEmitter.emit("start", mangaName, compression, mangaType, mangaNumber);
+    async safeCompress(component: Component, mangaName: string, mangaType: string, mangaNumber: string, directories: string[], compression: "cbr" /* | "pdf" */): Promise<CompressStats> {
         const name = component._getZippedFilenameFrom(mangaName, mangaNumber, mangaType, compression);
         try {
             const savePath = /*(compression === "cbr") ? */ await compress.zipDirectories(directories, name) /* : await compress.pdfDirectories(directories, name) */;
             const fileSize = fs.statSync(savePath).size;
-            eventEmitter.emit("done", mangaName, compression, mangaType, mangaNumber, savePath, fileSize);
-            return {savePath, fileSize};
+            return {path: savePath, size: fileSize};
         } catch (e) {
-            eventEmitter.emit("done", mangaName, compression, mangaType, mangaNumber, "", 0);
-            return {savePath: "", fileSize: 0};
+            return {path: "", size: 0};
         }
     },
     /**

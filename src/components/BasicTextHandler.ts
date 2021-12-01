@@ -1,3 +1,4 @@
+import { bytesToSize, CompressStats } from "../utils/compress";
 import { ChapterDownloadEmit, ChaptersDownloadEmit, ImageDownloadEmit, VolumeDownloadEmit, VolumesDownloadEmit } from "../utils/emitTypes";
 import { MangaAttributes } from "../utils/types";
 
@@ -24,6 +25,13 @@ class BasicTextHandler {
         callback.on("noimage", (attributes: MangaAttributes, links: string[]) => {
             console.log("No image found for", attributes, "at", links);
         });
+        callback.on("compressing", (attributes: MangaAttributes, savePath: string) => {
+            console.log("Compressing", attributes, "from", savePath);
+        });
+
+        callback.on("compressed", (attributes: MangaAttributes, savePath: string, stats: CompressStats) => {
+            console.log("Compressed", attributes, "to", savePath, "at", stats.path, ", size:", bytesToSize(stats.size));
+        });
         callback.on("done", (attributes: MangaAttributes, savePath: string) => {
             console.log("Chapter", attributes, "downloaded to", savePath);
         });
@@ -33,10 +41,10 @@ class BasicTextHandler {
         callback.on("start", (manga: string, start: number, end: number) => {
             console.log("Downloading chapters", manga, "from", start, "to", end);
         });
-        callback.on("startChapter", (attributes: MangaAttributes, pages: number) => {
+        callback.on("startchapter", (attributes: MangaAttributes, pages: number) => {
             console.log("Starting", attributes, "with", pages, "pages");
         });
-        callback.on("endChapter", (attributes: MangaAttributes, pages: number) => {
+        callback.on("endchapter", (attributes: MangaAttributes, pages: number) => {
             console.log("Finished downloading", attributes, "with", pages, "pages");
         });
         callback.on("noimage", (attributes: MangaAttributes, links: string[]) => {
@@ -57,10 +65,10 @@ class BasicTextHandler {
         callback.on("chapters", (chapters: string[]) => {
             console.log("Chapters to download from", chapters);
         });
-        callback.on("startChapter", (attributes: MangaAttributes, pages: number) => {
+        callback.on("startchapter", (attributes: MangaAttributes, pages: number) => {
             console.log("Starting", attributes, "with", pages, "pages");
         });
-        callback.on("endChapter", (attributes: MangaAttributes, pages: number) => {
+        callback.on("endchapter", (attributes: MangaAttributes, pages: number) => {
             console.log("Finished downloading", attributes, "with", pages, "pages");
         });
         callback.on("noimage", (attributes: MangaAttributes, links: string[]) => {
@@ -81,16 +89,16 @@ class BasicTextHandler {
         callback.on("chapters", (volume: number, volumeIndex: number, chapters: string[]) => {
             console.log("Chapters to download from", volume, "volume", volumeIndex, "of", chapters);
         });
-        callback.on("startVolume", (manga: string, volume: number, volumeIndex: number, total: number) => {
+        callback.on("startvolume", (manga: string, volume: number, volumeIndex: number, total: number) => {
             console.log("Starting Volume", volume, "of", manga, ",", volumeIndex, "/", total, "volumes");
         });
-        callback.on("startChapter", (attributes: MangaAttributes, pages: number) => {
+        callback.on("startchapter", (attributes: MangaAttributes, pages: number) => {
             console.log("Starting Chapter", attributes, "with", pages, "pages");
         });
-        callback.on("endChapter", (attributes: MangaAttributes, pages: number) => {
+        callback.on("endchapter", (attributes: MangaAttributes, pages: number) => {
             console.log("Finished downloading", attributes, "with", pages, "pages");
         });
-        callback.on("endVolume", (manga: string, volumeIndex: number, total: number, downloadLocations: string[]) => {
+        callback.on("endvolume", (manga: string, volumeIndex: number, total: number, downloadLocations: string[]) => {
             console.log("Finished downloading volumes", volumeIndex, "of", manga, "with", total, "volumes", "downloaded to", downloadLocations);
         });
         callback.on("noimage", (attributes: MangaAttributes, links: string[]) => {
