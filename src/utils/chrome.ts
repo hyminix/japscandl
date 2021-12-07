@@ -30,7 +30,7 @@ const chrome = {
                 "C:\\Program Files\\Microsoft\\Edge\\Application\\msedge.exe",
             ];
         } else if (process.platform === "linux"){
-            const commandsToTry = ["which google-chrome-stable", "which chromium-browser", "which google-chrome"];
+            const commandsToTry = ["which google-chrome-stable", "which chromium-browser", "which chromium", "which google-chrome"];
             for (const command of commandsToTry) {
                 try {
                     possiblePaths.push(execSync(command).toString().trim());
