@@ -13,7 +13,7 @@ class MangaAttributes {
         this.chapter = chapter?.toString() ?? "0";
         this.page = page?.toString() ?? "0";
     }
-    static fromLink(
+    public static fromLink(
         link: string
     ): MangaAttributes {
         const linkSplit = link.split("/");
@@ -24,21 +24,32 @@ class MangaAttributes {
         return new MangaAttributes(manga, chapter, page);
     }
 
-    getLectureLink(website: string): string {
+    public getLectureLink(website: string): string {
         return website + "/" + path.posix.join("lecture-en-ligne", this.manga, this.chapter, "/");
     }
 
-    getMangaLink(website: string): string {
+    public getMangaLink(website: string): string {
         return website + "/" + path.posix.join("manga", this.manga, "/");
     }
 
-    getPath(outputDirectory: string): string {
+    public getFolderPath(outputDirectory: string): string {
         return `${outputDirectory}/${this.manga}/${this.chapter}/`;
     }
 
-    getFilename(format: "jpg" | "png"): string {
+    public getFilename(format: "jpg" | "png"): string {
         return `${this.chapter}_${this.page}.${format}`;
     }
+
+    public getImagePath(outputDirectory: string, format: "jpg" | "png"): string {
+        return path.posix.join(this.getFolderPath(outputDirectory), this.getFilename(format));
+    }
+
+    public toString(): string {
+        const chapterString = (this.chapter === "0") ? "" : (!this.chapter.includes('volume')) ? `chapitre ${this.chapter}` : ` - ${this.chapter}`;
+        const pageString = (this.page === "0") ? "" : ` page ${this.page}`;
+        return `${this.manga} ${chapterString}${pageString}`;
+    }
+
 }
 
 export default MangaAttributes;

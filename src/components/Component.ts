@@ -17,7 +17,6 @@ const scripts = {
 class Component {
     WEBSITE = "https://www.japscan.ws";
     browser: Browser;
-    fast: boolean;
     timeout: number;
     outputDirectory: string;
 
@@ -31,7 +30,6 @@ class Component {
     }) {
         this.browser = browser;
         this.outputDirectory = options?.outputDirectory ?? "manga";
-        this.fast = options?.flags?.fast ?? false;
         this.timeout = (options?.flags?.timeout) ? options?.flags?.timeout * 1000 : 60 * 1000;
     }
 
@@ -109,8 +107,8 @@ class Component {
      * @param extension extension the file will have
      * @returns zipped path
      */
-    _getZippedFilenameFrom(manga: string, number: string, type: string, extension: string): string {
-        return path.resolve(`${this.outputDirectory}/${manga}/${manga}-${type}-${number}.${extension}`);
+    _getZippedFilenameFrom(manga: string, number: string, type: string): string {
+        return path.resolve(`${this.outputDirectory}/${manga}/${manga}-${type}-${number}.cbr`);
     }
 
     static async launch(options?: {

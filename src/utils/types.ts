@@ -18,7 +18,6 @@ export type DownloaderOnVolume = (mangaName: string, current: number, total: num
 
 export type ComponentFlags = {
     verbose?: boolean;
-    fast?: boolean;
     timeout?: number;
     visible?: boolean;
 }

@@ -1,7 +1,6 @@
 import archiver from "archiver";
 import fs from "fs";
 import path from "path";
-// import PDFDocument from "pdfkit";
 import fsplus from "./fsplus";
 import Fetcher from "../components/Fetcher";
 import Component from "../components/Component";
@@ -29,9 +28,9 @@ const compress = {
      * @param start start type
      * @param end optional, end type if range
      */
-    async zipFromJapscan(fetcher: Fetcher, mangaName: string, format: "chapitre" | "volume", type: "cbr"/*   | "pdf" */, start: number, end?: number): Promise<void> {
+    async zipFromJapscan(fetcher: Fetcher, mangaName: string, format: "chapitre" | "volume", type: "cbr", start: number, end?: number): Promise<void> {
         function pushAttributesToZipArray(attributes: MangaAttributes): void {
-            toZip.push(attributes.getPath(fetcher.outputDirectory));
+            toZip.push(attributes.getFolderPath(fetcher.outputDirectory));
         }
         // if there an end, then it's a range, if there is none then it's just a number
         const toDownload = end ? { start: start, end: end } : start;
@@ -66,13 +65,11 @@ const compress = {
     async safeZip(component: Component, mangaName: string, mangaType: string, mangaNumber: string, directories: string[]): Promise<CompressStats> {
         return compress.safeCompress(component, mangaName, mangaType, mangaNumber, directories, "cbr");
     },
-    /* async safePdf(component: Component, mangaName: string, mangaType: string, mangaNumber: string, directories: string[]): Promise<void> {
-        return compress.safeCompress(component, mangaName, mangaType, mangaNumber, directories, "pdf");
-    }, */
-    async safeCompress(component: Component, mangaName: string, mangaType: string, mangaNumber: string, directories: string[], compression: "cbr" /* | "pdf" */): Promise<CompressStats> {
-        const name = component._getZippedFilenameFrom(mangaName, mangaNumber, mangaType, compression);
+
+    async safeCompress(component: Component, mangaName: string, mangaType: string, mangaNumber: string, directories: string[], compression: "cbr"): Promise<CompressStats> {
+        const name = component._getZippedFilenameFrom(mangaName, mangaNumber, mangaType);
         try {
-            const savePath = /*(compression === "cbr") ? */ await compress.zipDirectories(directories, name) /* : await compress.pdfDirectories(directories, name) */;
+            const savePath = await compress.zipDirectories(directories, name);
             const fileSize = fs.statSync(savePath).size;
             return { path: savePath, size: fileSize };
         } catch (e) {
@@ -105,71 +102,6 @@ const compress = {
             archive.finalize();
         });
     },
-    /**
-     * 
-     * @param source array of directories containing images
-     * @param out pdf name
-     * @returns pdf location
-     */
-    /* async pdfDirectories(source: string[], out: string): Promise<string> {
-        function getChapterNumber(filename: string): number {
-            // isolate page
-            const split = filename.split("_");
-            // isolate chapter number
-            const splitForChapterNumber = split[0].split(path.sep);
-            // extract chapter number
-            const chapterNumber = splitForChapterNumber[splitForChapterNumber.length - 1];
-
-            // if chapter is a volume, remove it
-            if (chapterNumber.includes("volume-")) chapterNumber.replace("volume-", "");
-            return +chapterNumber;
-        }
-        function getNumberFromFilename(filename: string): number {
-            // add both of numbers as string to be able to sort multiple chapters
-            const num = getChapterNumber(filename) + filename.split("_")[1].split(".")[0];
-            return +num;
-        }
-        function sortFunction(a: string, b: string) {
-            const aChapterNumber = getChapterNumber(a);
-            const bChapterNumber = getChapterNumber(b);
-            if (aChapterNumber > bChapterNumber) {
-                return 1;
-            } else if (aChapterNumber < bChapterNumber) {
-                return -1;
-            } else {
-                return getNumberFromFilename(a) - getNumberFromFilename(b);
-            }
-        }
-
-        const allImages: string[] = [];
-        source
-            // for each directories
-            .forEach((folderPath) => fs
-                // read files in directory
-                .readdirSync(folderPath)
-                // for each image
-                .forEach((image) => allImages
-                    // add image full path to array
-                    .push(path.join(folderPath, image))));
-        allImages.sort(sortFunction);
-        //return imagesToPdf(allImages, out);
-        const doc = new PDFDocument({ autoFirstPage: false });
-        doc.pipe(fs.createWriteStream(out));
-
-        allImages.forEach((image) => {
-            //@ts-ignore openImage exists
-            const openedImage = doc.openImage(image);
-            doc.addPage({ size: [openedImage.width, openedImage.height] });
-            doc.image(openedImage, 0, 0);
-        })
-        doc.end();
-        return new Promise((resolve) => {
-            doc.on('end', () => {
-                resolve(out);
-            });
-        });
-
-    } */
 };
 
 export default compress;

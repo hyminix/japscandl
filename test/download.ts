@@ -10,12 +10,12 @@ describe("Downloader tests", function () {
         this.timeout(0);
         downloader = await Downloader.launch();
     });
-    testDownloadOfManga("one-piece", 998, 11, { number: 4, height: 1300, width: 1790 }, "cbr");
-    testDownloadOfManga("jujutsu-kaisen", 152, 10, { number: 10, height: 1300, width: 897 },"cbr");
+    testDownloadOfManga("one-piece", 998, 11, { number: 4, height: 1300, width: 1790 },  true);
+    testDownloadOfManga("jujutsu-kaisen", 152, 10, { number: 10, height: 1300, width: 897 }, true);
 });
 
 
-function testDownloadOfManga(mangaName: string, chapter: number, numberOfPages: number, pageToCheck: { number: number, height: number, width: number }, type: "cbr" /* | "pdf" */) {
+function testDownloadOfManga(mangaName: string, chapter: number, numberOfPages: number, pageToCheck: { number: number, height: number, width: number }, compression: boolean) {
     describe(`Downloading ${mangaName} chapter ${chapter}`, function () {
         this.timeout(1000 * 60 * 5); // 5 minutes
         this.afterEach("number of open chrome pages must be all about:blank", async function () {
@@ -37,7 +37,7 @@ function testDownloadOfManga(mangaName: string, chapter: number, numberOfPages: 
         it(`download ${mangaName} chapter ${chapter}`, function () {
             return new Promise((resolve, reject) => {
                 downloader
-                    .downloadChapter(mangaName, chapter, {compression: type})
+                    .downloadChapter(mangaName, chapter, {compression: compression})
                     .then(() => resolve(undefined))
                     .catch((error) => reject(error));
             });
@@ -67,17 +67,17 @@ function testDownloadOfManga(mangaName: string, chapter: number, numberOfPages: 
                 );
             }
         });
-        it(type + " must have been created", function () {
-            const typeName = downloader._getZippedFilenameFrom(mangaName, chapter.toString(), "chapitre", type);
+        it("cbr must have been created", function () {
+            const typeName = downloader._getZippedFilenameFrom(mangaName, chapter.toString(), "chapitre");
             if (!fs.existsSync(typeName)) {
-                throw new Error(type + " was not created at " + typeName);
+                throw new Error(compression + " was not created at " + typeName);
             }
         });
-        it(type + " must not be 0 bytes", function () {
-            const typeName = downloader._getZippedFilenameFrom(mangaName, chapter.toString(), "chapitre", type);
+        it(compression + " must not be 0 bytes", function () {
+            const typeName = downloader._getZippedFilenameFrom(mangaName, chapter.toString(), "chapitre");
             const stats = fs.statSync(typeName);
             if (stats.size === 0) {
-                throw new Error(type + " has size of 0 bytes");
+                throw new Error(compression + " has size of 0 bytes");
             }
         });
 
