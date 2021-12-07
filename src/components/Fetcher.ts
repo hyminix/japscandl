@@ -1,10 +1,10 @@
 import { Browser, Page } from "puppeteer";
 import Component from "./Component";
 import { Chapter, ComponentFlags, MangaContent, MangaInfos, SearchInfos, Volume } from "../utils/types";
-import url from "../utils/url";
 import getBrowser from "../utils/browser";
 import chrome from "../utils/chrome";
 import fetch from 'node-fetch';
+import MangaAttributes from "../MangaAttributes";
 
 class Fetcher extends Component {
     /**
@@ -29,7 +29,7 @@ class Fetcher extends Component {
         // extract chapter number from last chapter link attributes
         const lastVolume = data.volumes[data.volumes.length - 1];
         const lastChapter = lastVolume.chapters[lastVolume.chapters.length - 1];
-        const lastChapterNumber = +url.getAttributesFromLink(lastChapter.link).chapter;
+        const lastChapterNumber = +MangaAttributes.fromLink(lastChapter.link).chapter;
         return {
             volumes: data.volumes.length,
             chapters: lastChapterNumber,
@@ -99,7 +99,7 @@ class Fetcher extends Component {
             // get all chapters objects in all volumes as an array
             getAllChaptersFromContent(data)
                 .filter((chapter) => {
-                    const chapterNumber = +url.getAttributesFromLink(chapter.link).chapter;
+                    const chapterNumber = +MangaAttributes.fromLink(chapter.link).chapter;
                     return chapterNumber >= start && chapterNumber <= end;
                 })
         return filteredChapters;
@@ -158,7 +158,7 @@ class Fetcher extends Component {
      * @param page can give a page to prevent it from being created
      */
     async fetchMangaContent(manga: string, page?: Page): Promise<MangaContent> {
-        const link = url.buildMangaLink(manga, this);
+        const link = new MangaAttributes(manga).getMangaLink(this.WEBSITE);
         // indicates if we need to close the page at the end of the function (in case we create a new page)
         let closePage = false;
         if (!page) {

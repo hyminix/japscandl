@@ -1,11 +1,11 @@
 import archiver from "archiver";
 import fs from "fs";
 import path from "path";
-import url from "./url";
 // import PDFDocument from "pdfkit";
 import fsplus from "./fsplus";
 import Fetcher from "../components/Fetcher";
 import Component from "../components/Component";
+import MangaAttributes from "../MangaAttributes";
 
 export function bytesToSize(bytes: number): string {
     const sizes = ['octet', 'Ko', 'Mo', 'Go', 'To'];
@@ -30,35 +30,30 @@ const compress = {
      * @param end optional, end type if range
      */
     async zipFromJapscan(fetcher: Fetcher, mangaName: string, format: "chapitre" | "volume", type: "cbr"/*   | "pdf" */, start: number, end?: number): Promise<void> {
+        function pushAttributesToZipArray(attributes: MangaAttributes): void {
+            toZip.push(attributes.getPath(fetcher.outputDirectory));
+        }
         // if there an end, then it's a range, if there is none then it's just a number
         const toDownload = end ? { start: start, end: end } : start;
         const toZip: string[] = [];
         if (format === 'chapitre') {
             if (typeof toDownload !== "number") {
                 const links = await fetcher.fetchChapterLinksBetweenRange(mangaName, toDownload.start, toDownload.end);
-                links.forEach((link) => {
-                    const attributes = url.getAttributesFromLink(link);
-                    const path = fetcher._getPathFrom(attributes);
-                    toZip.push(path);
-                });
+                links.map((link) => MangaAttributes.fromLink(link)).forEach(pushAttributesToZipArray);
             } else {
-                const path = fetcher._getPathFrom({ chapter: toDownload.toString(), manga: mangaName, page: "" + 1 });
-                toZip.push(path);
+                const attributes = new MangaAttributes(mangaName, toDownload, 1);
+                pushAttributesToZipArray(attributes);
             }
         }
         if (format === 'volume') {
             if (typeof toDownload !== "number") {
                 for (let i = toDownload.start; i <= toDownload.end; i++) {
                     const chapters: string[] = await fetcher.fetchVolumeChapters(i, mangaName);
-                    chapters.forEach((chapter) => {
-                        toZip.push(fetcher._getPathFrom(chapter));
-                    });
+                    chapters.map((chapter: string) => new MangaAttributes(mangaName, chapter)).forEach(pushAttributesToZipArray);
                 }
             } else {
                 const chapters: string[] = await fetcher.fetchVolumeChapters(toDownload, mangaName);
-                chapters.forEach((chapter) => {
-                    toZip.push(fetcher._getPathFrom(chapter));
-                });
+                chapters.map((chapter: string) => new MangaAttributes(mangaName, chapter)).forEach(pushAttributesToZipArray);
             }
         }
         const isWorthZipping = fsplus.tellIfDoesntExist(toZip);
@@ -79,9 +74,9 @@ const compress = {
         try {
             const savePath = /*(compression === "cbr") ? */ await compress.zipDirectories(directories, name) /* : await compress.pdfDirectories(directories, name) */;
             const fileSize = fs.statSync(savePath).size;
-            return {path: savePath, size: fileSize};
+            return { path: savePath, size: fileSize };
         } catch (e) {
-            return {path: "", size: 0};
+            return { path: "", size: 0 };
         }
     },
     /**

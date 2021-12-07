@@ -1,8 +1,4 @@
-export interface MangaAttributes {
-    manga: string;
-    chapter: string;
-    page: string;
-}
+import MangaAttributes from "../MangaAttributes";
 
 export interface MangaInfos {
     volumes: number;

@@ -1,5 +1,5 @@
-import { MangaAttributes } from "./types";
 import { EventEmitter } from "events";
+import MangaAttributes from "../MangaAttributes";
 import { CompressStats } from "./compress";
 
 export interface ImageDownloadEmit {

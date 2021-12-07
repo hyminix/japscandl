@@ -1,6 +1,6 @@
+import MangaAttributes from "../MangaAttributes";
 import { bytesToSize, CompressStats } from "../utils/compress";
 import { ChapterDownloadEmit, ChaptersDownloadEmit, ImageDownloadEmit, VolumeDownloadEmit, VolumesDownloadEmit } from "../utils/emitTypes";
-import { MangaAttributes } from "../utils/types";
 
 class BasicTextHandler {
     static imageDownloadCallback(callback: ImageDownloadEmit) {

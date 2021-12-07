@@ -1,9 +1,7 @@
 import browser from "./src/utils/browser"
 import chrome from "./src/utils/chrome"
 import fsplus from "./src/utils/fsplus"
-import manga from "./src/utils/manga"
 import mangaFormat from "./src/utils/mangaFormat"
-import url from "./src/utils/url"
 import compress from "./src/utils/compress"
 import * as types from "./src/utils/types";
 
@@ -11,9 +9,7 @@ const utils = {
     browser,
     chrome,
     fsplus,
-    manga,
     mangaFormat,
-    url,
     compress: compress,
 };
 

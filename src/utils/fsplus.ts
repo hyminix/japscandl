@@ -29,6 +29,23 @@ const fsplus = {
             if(err) throw err;
         });
     },
+    alreadyDownloaded(path: string, isDirectory = true): boolean {
+        try {
+            const fileStats = fs.lstatSync(path);
+            if(isDirectory){
+                return fileStats.isDirectory();
+            } else {
+                return fileStats.isFile();
+            }
+        } catch (e) {
+            return false;
+        }
+    },
+    rmLocations(downloadLocations: string[]): void {
+        downloadLocations.forEach((path: string) =>
+            fs.rmSync(path, { force: true, recursive: true })
+        );
+    },
 };
 
 export default fsplus;

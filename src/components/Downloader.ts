@@ -2,14 +2,13 @@ import { Browser } from "puppeteer";
 import path from "path";
 // utils
 import compress from "../utils/compress";
-import url from "../utils/url";
 import fsplus from "../utils/fsplus";
-import manga from "../utils/manga";
 import Fetcher from "./Fetcher";
 import getBrowser from "../utils/browser";
 import chrome from "../utils/chrome";
 import { ComponentFlags } from "../utils/types";
 import { ChapterDownloadEmit, ChaptersDownloadEmit, ImageDownloadEmit, VolumeDownloadEmit, VolumesDownloadEmit } from "../utils/emitTypes";
+import MangaAttributes from "../MangaAttributes";
 
 
 /**
@@ -46,7 +45,7 @@ class Downloader extends Fetcher {
     async downloadImageFromLink(link: string, callback?: (events: ImageDownloadEmit) => void): Promise<void> {
         const eventEmitter = new ImageDownloadEmit();
         if (callback) callback(eventEmitter);
-        const attributes = url.getAttributesFromLink(link);
+        const attributes = MangaAttributes.fromLink(link);
         eventEmitter.emit("start", attributes, link);
         const page = await this.createExistingPage(link, "normal");
         let savePath = path.posix.join(
@@ -54,8 +53,10 @@ class Downloader extends Fetcher {
             attributes.manga,
             attributes.chapter
         );
+        attributes.getPath(this.WEBSITE);
         fsplus.createPath(savePath);
-        savePath = path.posix.join(savePath, manga.getFilenameFrom(attributes, this.imageFormat));
+        const filename = attributes.getFilename(this.imageFormat);
+        savePath = path.posix.join(savePath, filename);
         const popupCanvasSelector = "body > canvas";
         const canvasElement = await this.waitForSelector(page, popupCanvasSelector);
         if (!canvasElement) {
@@ -89,7 +90,7 @@ class Downloader extends Fetcher {
         }
     ): Promise<void> {
         const { compression, callback } = options ?? {};
-        const link = url.buildLectureLink(mangaName, chapter.toString(), this);
+        const link = new MangaAttributes(mangaName, chapter.toString()).getLectureLink(this.WEBSITE);
         return this.downloadChapterFromLink(link, { compression, callback });
     }
 
@@ -121,7 +122,7 @@ class Downloader extends Fetcher {
         );
         let i = 0;
         for (const link of linksToDownload) {
-            const linkAttributes = url.getAttributesFromLink(link);
+            const linkAttributes = MangaAttributes.fromLink(link);
             eventEmitter.emit('startchapter', linkAttributes, i++, linksToDownload.length);
             await this.downloadChapterFromLink(link, {
                 compression,
@@ -149,7 +150,7 @@ class Downloader extends Fetcher {
         const eventEmitter = new ChapterDownloadEmit();
         if (options?.callback) options?.callback(eventEmitter);
         const { compression } = options ?? {};
-        const startAttributes = url.getAttributesFromLink(link);
+        const startAttributes = MangaAttributes.fromLink(link);
         const numberOfPages = await this.fetchNumberOfPagesInChapter(link);
         eventEmitter.emit("start", startAttributes, link, numberOfPages);
         for (let i = 1; i <= numberOfPages; i++) {
@@ -166,7 +167,7 @@ class Downloader extends Fetcher {
         }
 
         const zipFunction = (compression === "cbr") ? compress.safeZip /* : (compression === "pdf") ? compress.safePdf */ : () => { };
-        const downloadPath = this._getPathFrom(startAttributes);
+        const downloadPath = startAttributes.getPath(this.outputDirectory);
         eventEmitter.emit("compressing", startAttributes, downloadPath);
         const compressStats = await zipFunction(this, startAttributes.manga, "chapitre", startAttributes.chapter, [downloadPath]);
         eventEmitter.emit("compressed", startAttributes, downloadPath, compressStats);
@@ -185,6 +186,7 @@ class Downloader extends Fetcher {
         volumeNumber: number,
         options?: {
             compression?: "cbr" /* | "pdf" */,
+            deleteAfterCompression?: boolean,
             callback?: (events: VolumeDownloadEmit) => void;
         }
     ): Promise<void> {
@@ -233,7 +235,12 @@ class Downloader extends Fetcher {
         }
         if (compression === "cbr") {
             // TODO: begin zip
-            await compress.safeZip(this, mangaName, "volume", volumeNumber.toString(), downloadLocations);
+            eventEmitter.emit('compressing', mangaName, downloadLocations);
+            const compressInfos = await compress.safeZip(this, mangaName, "volume", volumeNumber.toString(), downloadLocations);
+            if(options?.deleteAfterCompression) {
+                fsplus.rmLocations(downloadLocations);
+            }
+            eventEmitter.emit('compressed', mangaName, compressInfos);
             // TODO: end zip with size, path
         } /* else if (compression === "pdf") {
             await compress.pdfDirectories(downloadLocations, this._getZippedFilenameFrom(mangaName, volumeNumber.toString(), "volume", "pdf"))

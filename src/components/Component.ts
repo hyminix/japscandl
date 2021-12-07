@@ -1,7 +1,6 @@
 import { Browser, ElementHandle, Page, Response } from "puppeteer";
 import path from "path";
-import { ComponentFlags, MangaAttributes } from "../utils/types";
-import url from "../utils/url";
+import { ComponentFlags } from "../utils/types";
 import getBrowser from "../utils/browser";
 import chrome from "../utils/chrome";
 import normalScript from "../inject/inject";
@@ -100,21 +99,6 @@ class Component {
         });
         await page.close();
         return res;
-    }
-
-    /**
-     *
-     * @param param can be a link or manga attributes
-     * @returns path to manga without filename
-     */
-    _getPathFrom(
-        param: string | MangaAttributes
-    ): string {
-        if (typeof param === "string") {
-            return this._getPathFrom(url.getAttributesFromLink(param));
-        } else {
-            return `${this.outputDirectory}/${param.manga}/${param.chapter}/`;
-        }
     }
 
     /**
