@@ -36,6 +36,7 @@ describe("Fetch manga stats tests", function () {
     });
     it("Fetchs one-piece volume 97 chapters", function () {
         const supposedResults = [
+            WEBSITE + "/lecture-en-ligne/one-piece/975/",
             WEBSITE + "/lecture-en-ligne/one-piece/976/",
             WEBSITE + "/lecture-en-ligne/one-piece/977/",
             WEBSITE + "/lecture-en-ligne/one-piece/978/",
@@ -45,8 +46,6 @@ describe("Fetch manga stats tests", function () {
             WEBSITE + "/lecture-en-ligne/one-piece/982/",
             WEBSITE + "/lecture-en-ligne/one-piece/983/",
             WEBSITE + "/lecture-en-ligne/one-piece/984/",
-            WEBSITE + "/lecture-en-ligne/one-piece/985/",
-            WEBSITE + "/lecture-en-ligne/one-piece/986/",
         ];
         return new Promise((resolve, reject) => {
             const supposedResultsString = supposedResults.toString();
