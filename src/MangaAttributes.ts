@@ -1,4 +1,5 @@
 import path from "path";
+import {WEBSITE} from "./utils/variables";
 
 class MangaAttributes {
     manga: string;
@@ -24,12 +25,12 @@ class MangaAttributes {
         return new MangaAttributes(manga, chapter, page);
     }
 
-    public getLectureLink(website: string): string {
-        return website + "/" + path.posix.join("lecture-en-ligne", this.manga, this.chapter, "/");
+    public getLectureLink(): string {
+        return WEBSITE + "/" + path.posix.join("lecture-en-ligne", this.manga, this.chapter, "/");
     }
 
-    public getMangaLink(website: string): string {
-        return website + "/" + path.posix.join("manga", this.manga, "/");
+    public getMangaLink(): string {
+        return WEBSITE + "/" + path.posix.join("manga", this.manga, "/");
     }
 
     public getFolderPath(outputDirectory: string): string {

@@ -22,8 +22,8 @@ class BasicTextHandler {
         callback.on("page", (attributes: MangaAttributes, totalPages: number, savePath: string) => {
             console.log(`Downloading page ${attributes} / ${totalPages} at ${savePath}`);
         });
-        callback.on("noimage", (attributes: MangaAttributes, links: string[]) => {
-            console.log(`No image found for ${attributes} at ${links}`);
+        callback.on("noimage", (attributes: MangaAttributes, link: string) => {
+            console.log(`No image found for ${attributes} at ${link}`);
         });
         callback.on("compressing", (attributes: MangaAttributes, savePath: string) => {
             console.log(`Compressing ${attributes} from ${savePath}`);
@@ -55,8 +55,8 @@ class BasicTextHandler {
         callback.on("page", (attributes: MangaAttributes, totalPages: number) => {
             console.log(`Downloaded ${attributes} out of ${totalPages}`);
         });
-        callback.on("done", (manga, links, downloadLocations) => {
-            console.log(`${manga} chapters ${links} downloaded to ${downloadLocations}`);
+        callback.on("done", (manga, downloadLocations) => {
+            console.log(`${manga} downloaded to ${downloadLocations}`);
         });
     }
 
@@ -67,11 +67,11 @@ class BasicTextHandler {
         callback.on(`chapters`, (chapters: string[]) => {
             console.log(`Chapters to download from`, chapters);
         });
-        callback.on("startchapter", (attributes: MangaAttributes, pages: number) => {
-            console.log(`Starting ${attributes} with`, pages, `pages`);
+        callback.on("startchapter", (attributes: MangaAttributes, pages:number, current:number, total: number) => {
+            console.log(`Starting ${attributes} with`, pages, `pages`, `${current}/${total}`);
         });
-        callback.on(`endchapter`, (attributes: MangaAttributes, pages: number) => {
-            console.log(`Finished downloading ${attributes} with`, pages, `pages`);
+        callback.on(`endchapter`, (attributes: MangaAttributes, current: number, total:number) => {
+            console.log(`Finished downloading ${attributes}, ${current}/${total}`);
         });
         callback.on("noimage", (attributes: MangaAttributes, links: string[]) => {
             console.log(`No image found for ${attributes} at`, links);

@@ -158,7 +158,7 @@ class Fetcher extends Component {
      * @param page can give a page to prevent it from being created
      */
     async fetchMangaContent(manga: string, page?: Page): Promise<MangaContent> {
-        const link = new MangaAttributes(manga).getMangaLink(this.WEBSITE);
+        const link = new MangaAttributes(manga).getMangaLink();
         // indicates if we need to close the page at the end of the function (in case we create a new page)
         let closePage = false;
         if (!page) {

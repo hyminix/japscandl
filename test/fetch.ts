@@ -1,4 +1,5 @@
 import Fetcher from "../src/components/Fetcher";
+import { WEBSITE } from "../src/utils/variables";
 
 let fetcher: Fetcher;
 
@@ -35,17 +36,17 @@ describe("Fetch manga stats tests", function () {
     });
     it("Fetchs one-piece volume 97 chapters", function () {
         const supposedResults = [
-            fetcher.WEBSITE + "/lecture-en-ligne/one-piece/976/",
-            fetcher.WEBSITE + "/lecture-en-ligne/one-piece/977/",
-            fetcher.WEBSITE + "/lecture-en-ligne/one-piece/978/",
-            fetcher.WEBSITE + "/lecture-en-ligne/one-piece/979/",
-            fetcher.WEBSITE + "/lecture-en-ligne/one-piece/980/",
-            fetcher.WEBSITE + "/lecture-en-ligne/one-piece/981/",
-            fetcher.WEBSITE + "/lecture-en-ligne/one-piece/982/",
-            fetcher.WEBSITE + "/lecture-en-ligne/one-piece/983/",
-            fetcher.WEBSITE + "/lecture-en-ligne/one-piece/984/",
-            fetcher.WEBSITE + "/lecture-en-ligne/one-piece/985/",
-            fetcher.WEBSITE + "/lecture-en-ligne/one-piece/986/",
+            WEBSITE + "/lecture-en-ligne/one-piece/976/",
+            WEBSITE + "/lecture-en-ligne/one-piece/977/",
+            WEBSITE + "/lecture-en-ligne/one-piece/978/",
+            WEBSITE + "/lecture-en-ligne/one-piece/979/",
+            WEBSITE + "/lecture-en-ligne/one-piece/980/",
+            WEBSITE + "/lecture-en-ligne/one-piece/981/",
+            WEBSITE + "/lecture-en-ligne/one-piece/982/",
+            WEBSITE + "/lecture-en-ligne/one-piece/983/",
+            WEBSITE + "/lecture-en-ligne/one-piece/984/",
+            WEBSITE + "/lecture-en-ligne/one-piece/985/",
+            WEBSITE + "/lecture-en-ligne/one-piece/986/",
         ];
         return new Promise((resolve, reject) => {
             const supposedResultsString = supposedResults.toString();
@@ -68,7 +69,7 @@ describe("Fetch manga stats tests", function () {
         return new Promise((resolve, reject) => {
             fetcher
                 .fetchNumberOfPagesInChapter(
-                    fetcher.WEBSITE + "/lecture-en-ligne/one-piece/1000/"
+                    WEBSITE + "/lecture-en-ligne/one-piece/1000/"
                 )
                 .then((numberOfPages) => {
                     if (supposedResult !== numberOfPages) {
@@ -89,13 +90,13 @@ describe("Fetch manga stats tests", function () {
             return "none";
         }
         const supposedLinks = [
-            fetcher.WEBSITE + "/lecture-en-ligne/one-piece/1000/",
-            fetcher.WEBSITE + "/lecture-en-ligne/one-piece/1000.5/",
-            fetcher.WEBSITE + "/lecture-en-ligne/one-piece/1001/",
-            fetcher.WEBSITE + "/lecture-en-ligne/one-piece/1002/",
-            fetcher.WEBSITE + "/lecture-en-ligne/one-piece/1003/",
-            fetcher.WEBSITE + "/lecture-en-ligne/one-piece/1004/",
-            fetcher.WEBSITE + "/lecture-en-ligne/one-piece/1005/",
+            WEBSITE + "/lecture-en-ligne/one-piece/1000/",
+            WEBSITE + "/lecture-en-ligne/one-piece/1000.5/",
+            WEBSITE + "/lecture-en-ligne/one-piece/1001/",
+            WEBSITE + "/lecture-en-ligne/one-piece/1002/",
+            WEBSITE + "/lecture-en-ligne/one-piece/1003/",
+            WEBSITE + "/lecture-en-ligne/one-piece/1004/",
+            WEBSITE + "/lecture-en-ligne/one-piece/1005/",
         ];
         return new Promise((resolve, reject) => {
             fetcher

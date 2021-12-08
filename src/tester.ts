@@ -1,6 +1,7 @@
 import BasicTextHandler from "./components/BasicTextHandler";
 import Downloader from "./components/Downloader";
 import MangaAttributes from "./MangaAttributes";
+
 Downloader.launch({
     flags: {
         visible: false,
@@ -21,10 +22,9 @@ Downloader.launch({
         },
     });
     // */
-
     await downloader.downloadChaptersFromLinks("one-piece", [
-        new MangaAttributes("one-piece", 998).getLectureLink(downloader.WEBSITE),
-        new MangaAttributes("one-piece", 1000).getLectureLink(downloader.WEBSITE)
+        new MangaAttributes("one-piece", 998).getLectureLink(),
+        new MangaAttributes("one-piece", 1000).getLectureLink(),
     ],
         {
             compression: true,
@@ -36,4 +36,19 @@ Downloader.launch({
                 });
             }
         });
+    // */
+
+    /*
+    downloader.downloadVolume("one-piece", 99, {
+        compression: true,
+        deleteAfterCompression: true,
+        callback: (events) => {
+            BasicTextHandler.volumeDownloadCallback(events);
+            events.on("done", () => {
+                downloader.destroy();
+            });
+        }
+    });
+
+    // */
 });

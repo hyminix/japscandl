@@ -1,4 +1,5 @@
 import fs from "fs";
+import { mkdir } from "fs/promises";
 
 const fsplus = {
     tellIfDoesntExist(locations: string[]): boolean {
@@ -22,17 +23,13 @@ const fsplus = {
             fs.mkdirSync(path);
         }
     },
-    createPath(_path: string): void {
-        fs.mkdir(_path, {
-            recursive: true
-        }, (err) => {
-            if(err) throw err;
-        });
+    async createPath(path: string): Promise<void> {
+        await mkdir(path, { recursive: true });
     },
     alreadyDownloaded(path: string, isDirectory = true): boolean {
         try {
             const fileStats = fs.lstatSync(path);
-            if(isDirectory){
+            if (isDirectory) {
                 return fileStats.isDirectory();
             } else {
                 return fileStats.isFile();

@@ -5,6 +5,7 @@ import getBrowser from "../utils/browser";
 import chrome from "../utils/chrome";
 import normalScript from "../inject/inject";
 import webtoonScript from "../inject/injectWebtoon";
+import { WEBSITE } from "../utils/variables";
 
 const scripts = {
     "normal": normalScript,
@@ -15,7 +16,6 @@ const scripts = {
  * Contains flags and variables needed for Fetcher and Downloader
  */
 class Component {
-    WEBSITE = "https://www.japscan.ws";
     browser: Browser;
     timeout: number;
     outputDirectory: string;
@@ -87,7 +87,7 @@ class Component {
  * @returns true if link is a webtoon and false if the link is not a webtoon
  */
     async isAWebtoon(mangaName: string): Promise<boolean> {
-        const link = this.WEBSITE + "/manga/" + mangaName + "/";
+        const link = WEBSITE + "/manga/" + mangaName + "/";
         const page = await this.createExistingPage(link);
         const res = await page.evaluate(() => {
             return (

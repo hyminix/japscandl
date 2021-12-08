@@ -15,6 +15,7 @@ import MangaAttributes from "../MangaAttributes";
  */
 class Downloader extends Fetcher {
     imageFormat: "jpg" | "png";
+    mock: boolean;
 
     /**
      * Instantiates a browser and reads config file to get output directory
@@ -28,8 +29,10 @@ class Downloader extends Fetcher {
         imageFormat?: "jpg" | "png",
     }) {
         super(browser, options);
-        // flags
         this.imageFormat = options?.imageFormat ?? "jpg";
+
+        // this reduces downloadImageFromLink to instantly return if mock is true
+        this.mock = options?.flags?.mock ?? false;
     }
 
     /**
@@ -41,33 +44,42 @@ class Downloader extends Fetcher {
         const attributes = MangaAttributes.fromLink(link);
         eventEmitter.emit("start", attributes, link);
 
-        const page = await this.createExistingPage(link, "normal");
+
+
         let savePath = attributes.getFolderPath(this.outputDirectory);
         fsplus.createPath(savePath);
         savePath = attributes.getImagePath(this.outputDirectory, this.imageFormat);
-        const canvasElement = await this.waitForSelector(page, "body > canvas");
-        if (!canvasElement) {
-            eventEmitter.emit("noimage", attributes, link);
-            return;
-        }
-        const dimensions = await canvasElement.evaluate((canvas) => {
-            // remove everything from page except canvas
-            document.querySelectorAll("div").forEach((div) => div.remove());
-            const width = canvas.getAttribute("width");
-            const height = canvas.getAttribute("height");
-            return {
-                width: (width) ? +width * 2 : 4096,
-                height: (height) ? +height * 2 : 2160,
-            };
-        });
-        await page.setViewport(dimensions);
 
-        await canvasElement
-            .screenshot({
-                path: savePath,
-            })
-            .catch((e) => console.log("Erreur dans la capture de l'image", e));
-        page.close();
+        // this is for debug purposes, it will prevent the correct behavior of the downloader
+        if (!this.mock) {
+
+            const page = await this.createExistingPage(link, "normal");
+
+            const canvasElement = await this.waitForSelector(page, "body > canvas");
+            if (!canvasElement) {
+                eventEmitter.emit("noimage", attributes, link);
+                return;
+            }
+            const dimensions = await canvasElement.evaluate((canvas) => {
+                // remove everything from page except canvas
+                document.querySelectorAll("div").forEach((div) => div.remove());
+                const width = canvas.getAttribute("width");
+                const height = canvas.getAttribute("height");
+                return {
+                    width: (width) ? +width * 2 : 4096,
+                    height: (height) ? +height * 2 : 2160,
+                };
+            });
+            await page.setViewport(dimensions);
+
+            await canvasElement
+                .screenshot({
+                    path: savePath,
+                })
+                .catch((e) => console.log("Erreur dans la capture de l'image", e));
+            page.close();
+        }
+
         eventEmitter.emit("done", attributes, savePath);
     }
 
@@ -113,7 +125,7 @@ class Downloader extends Fetcher {
             callback?: (events: ChapterDownloadEmit) => void;
         }
     ): Promise<void> {
-        const link = new MangaAttributes(mangaName, chapter.toString()).getLectureLink(this.WEBSITE);
+        const link = new MangaAttributes(mangaName, chapter.toString()).getLectureLink();
         return this.downloadChapterFromLink(link, options);
     }
 
@@ -122,7 +134,7 @@ class Downloader extends Fetcher {
         links: string[],
         options?: {
             compression?: boolean,
-            compressAsOne ?: boolean,
+            compressAsOne?: boolean,
             deleteAfterCompression?: boolean,
             callback?: (events: ChaptersDownloadEmit) => void,
         }) {
@@ -136,28 +148,29 @@ class Downloader extends Fetcher {
         const chapterDownloadLocations: Array<string> = [];
         let i = 0;
         for (const link of links) {
-            const linkAttributes = MangaAttributes.fromLink(link);
-            eventEmitter.emit('startchapter', linkAttributes, ++i, links.length);
             await this.downloadChapterFromLink(link, {
                 compression: childCompression,
                 callback: (events: ChapterDownloadEmit) => {
+                    events.on("start", (attributes, link, pages) => {
+                        eventEmitter.emit("startchapter", attributes, pages, ++i, links.length);
+                    })
                     events.on('page', (attributes, total) => {
                         eventEmitter.emit('page', attributes, total);
                     });
                     events.on("done", (attributes, download) => {
                         chapterDownloadLocations.push(download);
+                        eventEmitter.emit('endchapter', attributes, i, links.length);
                     });
                 }
             });
-            eventEmitter.emit('endchapter', linkAttributes, i, links.length);
         }
-        if(compression && compressAsOne) {
+        if (compression && compressAsOne) {
             eventEmitter.emit('compressing', mangaName, chapterDownloadLocations);
             const compressStats = await compress.safeZip(this, mangaName, "chapitres", `${startNumber}-${endNumber}`, chapterDownloadLocations);
             eventEmitter.emit('compressed', mangaName, chapterDownloadLocations, compressStats);
             if (options?.deleteAfterCompression) fsplus.rmLocations(chapterDownloadLocations);
         }
-        eventEmitter.emit('done', mangaName, links, chapterDownloadLocations);
+        eventEmitter.emit('done', mangaName, chapterDownloadLocations);
     }
 
     /**
@@ -167,7 +180,7 @@ class Downloader extends Fetcher {
      * @param compression defaults as true, if true the downloaded images are compressed as a cbr after downloading
      * @returns download locations as an array
      */
-     async downloadChapters(
+    async downloadChapters(
         mangaName: string,
         start: number,
         end: number,
@@ -183,8 +196,8 @@ class Downloader extends Fetcher {
             start,
             end
         );
-        this.downloadChaptersFromLinks(mangaName, linksToDownload, {compression, callback});
-        
+        this.downloadChaptersFromLinks(mangaName, linksToDownload, { compression, callback });
+
     }
 
 
@@ -193,7 +206,6 @@ class Downloader extends Fetcher {
      * @param mangaName manga name
      * @param volumeNumber volume number
      * @param compression defaults as true, if true the downloaded images are compressed as a cbr after downloading
-     * @returns array of paths, where the chapters of the volume were downloaded
      */
     async downloadVolume(
         mangaName: string,
@@ -213,38 +225,35 @@ class Downloader extends Fetcher {
 
         eventEmitter.emit('chapters', toDownloadFrom);
 
-        const downloadLocations: string[] = [];
-        let i = 0;
-        for (const link of toDownloadFrom) {
-            // should return path of download
-            await this.downloadChapterFromLink(link, {
-                callback: (events) => {
-                    events.on("start", (attributes, link, pages) => {
-                        eventEmitter.emit("startchapter", attributes, pages, toDownloadFrom.length)
-                    });
-                    events.on('page', (attributes, total) => {
-                        eventEmitter.emit('page', attributes, total)
-                    });
-                    events.on("noimage", (attributes, links) => {
-                        eventEmitter.emit('noimage', attributes, links);
-                    })
-                    events.on("done", (attributes, location) => {
-                        eventEmitter.emit('endchapter', attributes, i, toDownloadFrom.length);
-                        downloadLocations.push(location);
-                    });
-                }
-            });
-        }
-
-        if (options?.compression) {
-            eventEmitter.emit('compressing', mangaName, downloadLocations);
-            const compressInfos = await compress.safeZip(this, mangaName, "volume", volumeNumber.toString(), downloadLocations);
-            if (options?.deleteAfterCompression) {
-                fsplus.rmLocations(downloadLocations);
+        await this.downloadChaptersFromLinks(mangaName, toDownloadFrom, {
+            compressAsOne: true, compression: options?.compression, deleteAfterCompression: options?.deleteAfterCompression, callback: (events) => {
+                events.on("startchapter", (attributes, pages, current, total) => {
+                    eventEmitter.emit("startchapter", attributes, pages, current, total);
+                });
+                events.on("page", (attributes, total) => {
+                    eventEmitter.emit('page', attributes, total);
+                });
+                events.on("endchapter", (attributes, current, total) => {
+                    eventEmitter.emit("endchapter", attributes, current, total);
+                });
+                events.on("noimage", (attributes, links) => {
+                    eventEmitter.emit('noimage', attributes, links);
+                });
+                events.on("done", async (manga, locations) => {
+                    if (options?.compression) {
+                        eventEmitter.emit('compressing', manga, locations);
+                        const compressInfos = await compress.safeZip(this, manga, "volume", volumeNumber.toString(), locations);
+                        if (options?.deleteAfterCompression) {
+                            fsplus.rmLocations(locations);
+                        }
+                        eventEmitter.emit('compressed', manga, compressInfos);
+                    }
+                    eventEmitter.emit('done', manga, volumeNumber, locations);
+                });
             }
-            eventEmitter.emit('compressed', mangaName, compressInfos);
-        }
-        eventEmitter.emit('done', downloadLocations);
+        });
+
+
     }
 
     /**
@@ -275,7 +284,6 @@ class Downloader extends Fetcher {
         for (let volumeNumber = start; volumeNumber <= end; volumeNumber++) {
             const volumeIndex = volumeNumber - start + 1;
             await this.downloadVolume(mangaName, volumeNumber, {
-                compression,
                 callback: (events) => {
                     events.on("start", (manga, volume) => {
                         eventEmitter.emit('startvolume', manga, volume, volumeIndex, total);

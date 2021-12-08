@@ -20,6 +20,7 @@ export type ComponentFlags = {
     verbose?: boolean;
     timeout?: number;
     visible?: boolean;
+    mock?: boolean;
 }
 
 export type MangaContent = {

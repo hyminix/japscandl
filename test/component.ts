@@ -1,4 +1,5 @@
 import Component from "../src/components/Component";
+import { WEBSITE } from "../src/utils/variables";
 
 let component: Component;
 describe("Instantiate component", function () {
@@ -13,7 +14,7 @@ describe("japscan 404 tests", function () {
     it("Should throw because page is 404", function () {
         return new Promise((resolve, reject) => {
             component
-                .createExistingPage(component.WEBSITE + "/manga/one-piece")
+                .createExistingPage(WEBSITE + "/manga/one-piece")
                 .then((page) => page.close())
                 .catch((error) => reject(error));
             resolve(undefined);
@@ -22,7 +23,7 @@ describe("japscan 404 tests", function () {
     it("Should not throw because page exists", function () {
         return new Promise((resolve, reject) => {
             component
-                .createExistingPage(component.WEBSITE + "/manga/one-piece/")
+                .createExistingPage(WEBSITE + "/manga/one-piece/")
                 .catch((error) => reject(error));
             resolve(undefined);
         });
