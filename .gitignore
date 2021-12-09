@@ -1,5 +1,4 @@
 # custom
-.vscode
 *.jpg
 *.png
 build/
