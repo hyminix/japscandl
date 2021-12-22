@@ -4,6 +4,7 @@ export interface MangaInfos {
     volumes: number;
     chapters: number;
     name: string;
+    display: string;
     synopsis: string;
 }
 
@@ -24,6 +25,7 @@ export type ComponentFlags = {
 }
 
 export type MangaContent = {
+    display: string,
     manga: string,
     synopsis: string,
     volumes: Volume[],

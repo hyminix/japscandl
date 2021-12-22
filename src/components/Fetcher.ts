@@ -34,6 +34,7 @@ class Fetcher extends Component {
             volumes: data.volumes.length,
             chapters: lastChapterNumber,
             name: data.manga,
+            display: data.display,
             synopsis: data.synopsis,
         }
     }
@@ -229,11 +230,19 @@ class Fetcher extends Component {
 
         const synopsis = await page.$eval('p.list-group-item', (el) => {
             return el.textContent || "";
-        })
+        });
+
+        const displayName = await page.$eval('div.card-body:nth-child(1) > h1:nth-child(1)', (el) => {
+            const splitted = el.textContent?.trim().split(' ');
+            splitted?.shift();
+            const name = splitted?.join(' ');
+            return name ?? "";
+        });
         // close page if we created it earlier
         if (closePage) page.close();
 
         return {
+            display: displayName,
             manga,
             synopsis,
             volumes

@@ -1,54 +1,19 @@
-import BasicTextHandler from "./components/BasicTextHandler";
 import Downloader from "./components/Downloader";
-import MangaAttributes from "./MangaAttributes";
+import { ChapterDownloadEmit } from "./utils/emitTypes";
+import fs from "fs";
 
 Downloader.launch({
-    flags: {
-        visible: false,
-        timeout: 60,
-        verbose: false,
-    },
+  flags: {
+    visible: false,
+    timeout: 60,
+    verbose: false,
+    mock: true,
+  },
 }).then(async (downloader) => {
-    console.log("Downloading chapter");
-    /*
-    await downloader.downloadChapter("one-piece", 1000, {
-        compression: true,
-        deleteAfterCompression: true,
-        callback: (events) => {
-            BasicTextHandler.chapterDownloadCallback(events);
-            events.on("done", () => {
-                downloader.destroy();
-            });
-        },
-    });
-    // */
-    await downloader.downloadChaptersFromLinks("one-piece", [
-        new MangaAttributes("one-piece", 998).getLectureLink(),
-        new MangaAttributes("one-piece", 1000).getLectureLink(),
-    ],
-        {
-            compression: true,
-            compressAsOne: true,
-            callback: (events) => {
-                BasicTextHandler.chaptersDownloadCallback(events);
-                events.on("done", () => {
-                    downloader.destroy();
-                });
-            }
-        });
-    // */
-
-    /*
-    downloader.downloadVolume("one-piece", 99, {
-        compression: true,
-        deleteAfterCompression: true,
-        callback: (events) => {
-            BasicTextHandler.volumeDownloadCallback(events);
-            events.on("done", () => {
-                downloader.destroy();
-            });
-        }
-    });
-
-    // */
+  console.log("Fetching");
+  const manga = "tower-of-god";
+  const data = await downloader.fetchMangaContent(manga);
+  console.log("Fetched");
+  fs.writeFileSync(manga + ".json", JSON.stringify(data, null, 2));
+  downloader.destroy();
 });
