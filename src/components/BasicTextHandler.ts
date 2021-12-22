@@ -89,7 +89,7 @@ class BasicTextHandler {
             console.log(`Downloading volumes`, start, `to`, end, `of`, manga);
         });
         callback.on(`chapters`, (volume: number, volumeIndex: number, chapters: string[]) => {
-            console.log(`Chapters to download from`, volume, `volume`, volumeIndex, `of`, chapters);
+            console.log(`Chapters to download from volume ${volume}, ${volumeIndex}`, volume, volumeIndex, `of`, chapters);
         });
         callback.on(`startvolume`, (manga: string, volume: number, volumeIndex: number, total: number) => {
             console.log(`Starting Volume`, volume, `of`, manga, `,`, volumeIndex, `/`, total, `volumes`);
