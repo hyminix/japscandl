@@ -137,7 +137,7 @@ class Downloader extends Fetcher {
             compressAsOne?: boolean,
             deleteAfterCompression?: boolean,
             callback?: (events: ChaptersDownloadEmit) => void,
-        }) {
+        }): Promise<void> {
         const { compression, compressAsOne, callback } = options ?? {};
         const childCompression = (!compression) ? false : (!compressAsOne) ? true : false;
         const startNumber = MangaAttributes.fromLink(links[0]).chapter;
