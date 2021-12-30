@@ -86,15 +86,7 @@ const compress = {
 
         return new Promise((resolve, reject) => {
             source.forEach((s) => {
-                const split = s
-                    // split path on path separator (/ or \)
-                    .split(path.sep)
-                    //filter out empty strings
-                    .filter((v) => v);
-                // get the last element of the array (the chapter folder)
-                const lastDir = split[split.length - 1];
-                // put content of folder s on system into lastDir directory in the archive
-                archive.directory(s, lastDir);
+                archive.directory(s, false);
             });
             archive.on("error", (err) => reject(err)).pipe(stream);
 
