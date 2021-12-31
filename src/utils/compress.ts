@@ -79,14 +79,15 @@ const compress = {
     /**
      * @param {String[]} source is an array of path
      * @param {String} out is the filename
+     * @param {Boolean} flat true if you want no subdirectories in the zip
      */
-    async zipDirectories(source: string[], out: string): Promise<string> {
+    async zipDirectories(source: string[], out: string, flat?: boolean): Promise<string> {
         const archive = archiver("zip", { zlib: { level: 9 } });
         const stream = fs.createWriteStream(out);
 
         return new Promise((resolve, reject) => {
             source.forEach((s) => {
-                archive.directory(s, false);
+                archive.directory(s, flat ? false : path.basename(s));
             });
             archive.on("error", (err) => reject(err)).pipe(stream);
 
