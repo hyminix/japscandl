@@ -20,14 +20,14 @@ const chrome = {
         // If program runs on windows
         if (process.platform === "win32") {
             possiblePaths = [
+                "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe",
+                "C:\\Program Files\\Microsoft\\Edge\\Application\\msedge.exe",
                 "C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe",
                 "C:\\Program Files (x86)\\Google\\Chrome SxS\\Application\\chrome.exe",
                 "C:\\Program Files (x86)\\Chromium\\Application\\chrome.exe",
                 "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
                 "C:\\Program Files\\Google\\Chrome SxS\\Application\\chrome.exe",
                 "C:\\Program Files\\Chromium\\Application\\chrome.exe",
-                "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe",
-                "C:\\Program Files\\Microsoft\\Edge\\Application\\msedge.exe",
             ];
         } else if (process.platform === "linux"){
             const commandsToTry = ["which google-chrome-stable", "which chromium-browser", "which chromium", "which google-chrome"];
