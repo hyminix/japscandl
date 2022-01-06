@@ -15,7 +15,7 @@ const flags = yargs(process.argv.slice(2))
     if(flags.testing) platforms = ['linux'];
     for (const platform of platforms) {
         const fetcher = puppeteer.createBrowserFetcher({ platform: platform, path: path.resolve(".local-chromium/") })
-        if (fetcher.canDownload(revision)) {
+        if (await fetcher.canDownload(revision)) {
             //@ts-ignore
             console.log(fetcher._getFolderPath(revision));
             console.log("Can download")
