@@ -190,13 +190,12 @@ class Downloader extends Fetcher {
             callback?: (events: ChaptersDownloadEmit) => void,
         }
     ): Promise<void> {
-        const { compression, callback } = options ?? {};
         const linksToDownload = await this.fetchChapterLinksBetweenRange(
             mangaName,
             start,
             end
         );
-        await this.downloadChaptersFromLinks(mangaName, linksToDownload, { compression, callback });
+        await this.downloadChaptersFromLinks(mangaName, linksToDownload, options);
 
     }
 
