@@ -196,7 +196,7 @@ class Downloader extends Fetcher {
             start,
             end
         );
-        this.downloadChaptersFromLinks(mangaName, linksToDownload, { compression, callback });
+        await this.downloadChaptersFromLinks(mangaName, linksToDownload, { compression, callback });
 
     }
 
