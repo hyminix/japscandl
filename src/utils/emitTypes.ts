@@ -68,7 +68,7 @@ export class VolumeDownloadEmit extends EventEmitter {
 }
 
 export interface VolumesDownloadEmit {
-    on(event: "start", arg: (manga: string, start: number, end: number) => void): this;
+    on(event: "start", arg: (manga: string, start: number, end: number, totalVolumes:number) => void): this;
     on(event: "chapters", arg: ( volume: number, volumeIndex: number, chapters: string[]) => void): this;
     on(event: "startvolume", arg: (manga: string, volume: number, volumeIndex: number, total: number) => void): this;
     on(event: "startchapter", arg: (attributes: MangaAttributes, pages: number, current: number, total: number) => void): this;

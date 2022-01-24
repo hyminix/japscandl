@@ -268,21 +268,24 @@ class Downloader extends Fetcher {
         end: number,
         options?: {
             compression?: boolean,
+            deleteAfterCompression?: boolean,
             callback?: (events: VolumesDownloadEmit) => void;
         }
     ): Promise<void> {
         if (start > end) {
             throw new Error("Le début ne peut pas être plus grand que la fin");
         }
-        const { compression, callback } = options ?? {};
+        const { compression, deleteAfterCompression, callback } = options ?? {};
         const eventEmitter = new VolumesDownloadEmit(callback);
-        eventEmitter.emit('start', mangaName, start, end);
 
         const volumeDownloadLocations: Array<Array<string>> = [];
         const total = end - start + 1;
+        eventEmitter.emit('start', mangaName, start, end, total);
         for (let volumeNumber = start; volumeNumber <= end; volumeNumber++) {
             const volumeIndex = volumeNumber - start + 1;
             await this.downloadVolume(mangaName, volumeNumber, {
+                compression,
+                deleteAfterCompression,
                 callback: (events) => {
                     events.on("start", (manga, volume) => {
                         eventEmitter.emit('startvolume', manga, volume, volumeIndex, total);
@@ -290,8 +293,8 @@ class Downloader extends Fetcher {
                     events.on("chapters", (chapters) => {
                         eventEmitter.emit("chapters", volumeNumber, volumeIndex, chapters);
                     });
-                    events.on("startchapter", (attributes, pages) => {
-                        eventEmitter.emit('startchapter', attributes, pages);
+                    events.on("startchapter", (attributes, pages, current, total) => {
+                        eventEmitter.emit('startchapter', attributes, pages, current, total);
                     });
                     events.on("endchapter", (attributes, pages) => {
                         eventEmitter.emit('endchapter', attributes, pages);
