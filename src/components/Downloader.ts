@@ -225,7 +225,7 @@ class Downloader extends Fetcher {
         eventEmitter.emit('chapters', toDownloadFrom);
 
         await this.downloadChaptersFromLinks(mangaName, toDownloadFrom, {
-            compressAsOne: true, compression: options?.compression, deleteAfterCompression: options?.deleteAfterCompression, callback: (events) => {
+            callback: (events) => {
                 events.on("startchapter", (attributes, pages, current, total) => {
                     eventEmitter.emit("startchapter", attributes, pages, current, total);
                 });

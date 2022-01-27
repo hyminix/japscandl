@@ -1,19 +1,19 @@
 import Downloader from "./components/Downloader";
-import { ChapterDownloadEmit } from "./utils/emitTypes";
+import { ChapterDownloadEmit, ChaptersDownloadEmit, VolumeDownloadEmit } from "./utils/emitTypes";
 import fs from "fs";
+import BasicTextHandler from "./components/BasicTextHandler";
 
 Downloader.launch({
   flags: {
     visible: false,
     timeout: 60,
     verbose: false,
-    mock: true,
+    mock: false,
   },
 }).then(async (downloader) => {
-  console.log("Fetching");
-  const manga = "tower-of-god";
-  const data = await downloader.fetchMangaContent(manga);
-  console.log("Fetched");
-  fs.writeFileSync(manga + ".json", JSON.stringify(data, null, 2));
+  await downloader.downloadVolume("one-piece", 103, {compression: true, deleteAfterCompression: true, callback: (events: VolumeDownloadEmit) => {
+    BasicTextHandler.volumeDownloadCallback(events);
+  }});
+
   downloader.destroy();
 });

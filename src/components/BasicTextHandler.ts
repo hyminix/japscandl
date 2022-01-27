@@ -3,7 +3,7 @@ import { bytesToSize, CompressStats } from "../utils/compress";
 import { ChapterDownloadEmit, ChaptersDownloadEmit, ImageDownloadEmit, VolumeDownloadEmit, VolumesDownloadEmit } from "../utils/emitTypes";
 
 class BasicTextHandler {
-    static imageDownloadCallback(callback: ImageDownloadEmit) {
+    static imageDownloadCallback(callback: ImageDownloadEmit): void {
         callback.on("start", (attributes: MangaAttributes, link: string) => {
             console.log(`Downloading image from ${attributes} at ${link}`);
         });
@@ -15,7 +15,7 @@ class BasicTextHandler {
         });
     }
 
-    static chapterDownloadCallback(callback: ChapterDownloadEmit) {
+    static chapterDownloadCallback(callback: ChapterDownloadEmit): void {
         callback.on("start", (attributes: MangaAttributes, link: string, pages: number) => {
             console.log(`Downloading chapter ${attributes} at ${link} with ${pages} pages`);
         });
@@ -38,7 +38,7 @@ class BasicTextHandler {
         });
     }
 
-    static chaptersDownloadCallback(callback: ChaptersDownloadEmit) {
+    static chaptersDownloadCallback(callback: ChaptersDownloadEmit): void {
         callback.on("start", (manga: string, links: string[]) => {
 
             console.log(`Downloading chapters ${manga} from ${links}`);
@@ -60,15 +60,15 @@ class BasicTextHandler {
         });
     }
 
-    static volumeDownloadCallback(callback: VolumeDownloadEmit) {
+    static volumeDownloadCallback(callback: VolumeDownloadEmit): void {
         callback.on("start", (manga: string, volume: number) => {
-            console.log(`Downloading volume`, volume, `of`, manga);
+            console.log(`Downloading volume ${volume} of ${manga}`);
         });
         callback.on(`chapters`, (chapters: string[]) => {
             console.log(`Chapters to download from`, chapters);
         });
         callback.on("startchapter", (attributes: MangaAttributes, pages:number, current:number, total: number) => {
-            console.log(`Starting ${attributes} with`, pages, `pages`, `${current}/${total}`);
+            console.log(`Starting ${attributes} with ${pages} pages`, `${current}/${total}`);
         });
         callback.on(`endchapter`, (attributes: MangaAttributes, current: number, total:number) => {
             console.log(`Finished downloading ${attributes}, ${current}/${total}`);
@@ -84,7 +84,7 @@ class BasicTextHandler {
         });
     }
 
-    static volumesDownloadCallback(callback: VolumesDownloadEmit) {
+    static volumesDownloadCallback(callback: VolumesDownloadEmit): void {
         callback.on("start", (manga: string, start: number, end: number) => {
             console.log(`Downloading volumes`, start, `to`, end, `of`, manga);
         });
