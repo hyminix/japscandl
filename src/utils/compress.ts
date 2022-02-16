@@ -90,27 +90,10 @@ const compress = {
         format,
         numberString,
         toZip,
-        type
       );
     }
   },
   //////////////////////////
-  async safeZip(
-    component: Component,
-    mangaName: string,
-    mangaType: string,
-    mangaNumber: string,
-    directories: string[]
-  ): Promise<CompressStats> {
-    return compress.safeCompress(
-      component,
-      mangaName,
-      mangaType,
-      mangaNumber,
-      directories,
-      "cbr"
-    );
-  },
 
   async safeCompress(
     component: Component,
@@ -118,7 +101,6 @@ const compress = {
     mangaType: string,
     mangaNumber: string,
     directories: string[],
-    compression: "cbr"
   ): Promise<CompressStats> {
     const name = component._getZippedFilenameFrom(
       mangaName,

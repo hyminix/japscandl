@@ -95,6 +95,11 @@ class Downloader extends Fetcher {
         const eventEmitter = new ChapterDownloadEmit(options?.callback);
         const startAttributes = MangaAttributes.fromLink(link);
         const numberOfPages = await this.fetchNumberOfPagesInChapter(link);
+        const alreadyDownloaded = fsplus.directoryHasNChildren(startAttributes.getFolderPath(this.outputDirectory), numberOfPages);
+        if(alreadyDownloaded) {
+            eventEmitter.emit("alreadydownloaded", startAttributes, link);
+            return;
+        }
         eventEmitter.emit("start", startAttributes, link, numberOfPages);
         for (let i = 1; i <= numberOfPages; i++) {
             const pageLink = (i === 1) ? link : `${link}${i}.html`;
@@ -111,7 +116,7 @@ class Downloader extends Fetcher {
         const downloadPath = startAttributes.getFolderPath(this.outputDirectory);
         if (options?.compression) {
             eventEmitter.emit("compressing", startAttributes, downloadPath);
-            const compressStats = await compress.safeZip(this, startAttributes.manga, "chapitre", startAttributes.chapter, [downloadPath]);
+            const compressStats = await compress.safeCompress(this, startAttributes.manga, "chapitre", startAttributes.chapter, [downloadPath]);
             eventEmitter.emit("compressed", startAttributes, downloadPath, compressStats);
             if (options?.deleteAfterCompression) fsplus.rmLocations([downloadPath]);
         }
@@ -166,7 +171,7 @@ class Downloader extends Fetcher {
         }
         if (compression && compressAsOne) {
             eventEmitter.emit('compressing', mangaName, chapterDownloadLocations);
-            const compressStats = await compress.safeZip(this, mangaName, "chapitres", `${startNumber}-${endNumber}`, chapterDownloadLocations);
+            const compressStats = await compress.safeCompress(this, mangaName, "chapitres", `${startNumber}-${endNumber}`, chapterDownloadLocations);
             eventEmitter.emit('compressed', mangaName, chapterDownloadLocations, compressStats);
             if (options?.deleteAfterCompression) fsplus.rmLocations(chapterDownloadLocations);
         }
@@ -186,6 +191,7 @@ class Downloader extends Fetcher {
         end: number,
         options?: {
             compression?: boolean,
+            compressAsOne?: boolean,
             deleteAfterCompression?: boolean,
             callback?: (events: ChaptersDownloadEmit) => void,
         }
@@ -195,7 +201,7 @@ class Downloader extends Fetcher {
             start,
             end
         );
-        await this.downloadChaptersFromLinks(mangaName, linksToDownload, options);
+        return this.downloadChaptersFromLinks(mangaName, linksToDownload, options);
 
     }
 
@@ -241,7 +247,7 @@ class Downloader extends Fetcher {
                 events.on("done", async (manga, locations) => {
                     if (options?.compression) {
                         eventEmitter.emit('compressing', manga, locations);
-                        const compressInfos = await compress.safeZip(this, manga, "volume", volumeNumber.toString(), locations);
+                        const compressInfos = await compress.safeCompress(this, manga, "volume", volumeNumber.toString(), locations);
                         if (options?.deleteAfterCompression) {
                             fsplus.rmLocations(locations);
                         }

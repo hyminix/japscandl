@@ -26,6 +26,11 @@ const fsplus = {
     async createPath(path: string): Promise<void> {
         await mkdir(path, { recursive: true });
     },
+    directoryHasNChildren(path: string, n: number): boolean {
+        const files = fs.readdirSync(path);
+        return files.length === n;
+    },
+
     alreadyDownloaded(path: string, isDirectory = true): boolean {
         try {
             const fileStats = fs.lstatSync(path);
