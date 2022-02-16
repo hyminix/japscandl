@@ -89,7 +89,7 @@ const compress = {
         mangaName,
         format,
         numberString,
-        toZip,
+        toZip
       );
     }
   },
@@ -100,7 +100,7 @@ const compress = {
     mangaName: string,
     mangaType: string,
     mangaNumber: string,
-    directories: string[],
+    directories: string[]
   ): Promise<CompressStats> {
     const name = component._getZippedFilenameFrom(
       mangaName,
@@ -139,14 +139,16 @@ const compress = {
     });
   },
 
-  async readImagesFromZip(zipPath: string): Promise<{path: string, value: string}[]> {
+  async readImagesFromZip(
+    zipPath: string
+  ): Promise<{ path: string; value: string }[]> {
     const zip = new StreamZip.async({
       file: zipPath,
       storeEntries: true,
     });
 
     const entries = await zip.entries();
-    const images: {path: string, value: string}[] = [];
+    const images: { path: string; value: string }[] = [];
     for (const entry of Object.values(entries)) {
       const desc = entry.isDirectory ? "directory" : `${entry.size} bytes`;
       console.log(`Entry ${entry.name}: ${desc}`);
