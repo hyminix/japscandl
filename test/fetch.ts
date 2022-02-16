@@ -64,26 +64,7 @@ describe("Fetch manga stats tests", function () {
             });
         });
     });
-    it(`Fetchs one-piece chapter 1000 pages`, function () {
-        const supposedResult = 15;
-        return new Promise((resolve, reject) => {
-            fetcher
-                .fetchNumberOfPagesInChapter(
-                    WEBSITE + "/lecture-en-ligne/one-piece/1000/"
-                )
-                .then((numberOfPages) => {
-                    if (supposedResult !== numberOfPages) {
-                        reject(new Error(
-                            "Wrong fetch. Supposed: " +
-                            supposedResult +
-                            "\nGot: " +
-                            numberOfPages
-                        ));
-                    }
-                    resolve(undefined);
-                });
-        });
-    });
+
     it("Fetchs range between one-piece 1000 and 1005", function () {
         function getListOrNone(arr: string[]) {
             if (arr.length) return arr.join(' | ');
@@ -123,6 +104,44 @@ describe("Fetch manga stats tests", function () {
                     ))
                 )
                 .catch((error) => resolve(error));
+        });
+    });
+
+});
+
+describe("fetch pages tests", function () {
+    it(`Fetchs one-piece chapter 1000 pages`, function () {
+        const supposedResult = 15;
+        return new Promise((resolve, reject) => {
+            fetcher
+                .fetchNumberOfPagesInChapter(
+                    WEBSITE + "/lecture-en-ligne/one-piece/1000/"
+                )
+                .then((numberOfPages) => {
+                    if (supposedResult !== numberOfPages) {
+                        reject(new Error(
+                            "Wrong fetch. Supposed: " +
+                            supposedResult +
+                            "\nGot: " +
+                            numberOfPages
+                        ));
+                    }
+                    resolve(undefined);
+                });
+        });
+    });
+    it("Fetch number of pages in One Piece volume 1", function () {
+        return new Promise((resolve, reject) => {
+
+            fetcher.fetchNumberOfPagesInChapter(WEBSITE + "/lecture-en-ligne/one-piece/volume-1/").then((pages) => {
+                if (pages !== 206) {
+                    reject(new Error(
+                        "Wrong fetch. Supposed: 206\nGot: " +
+                        pages
+                    ));
+                }
+                resolve(undefined);
+            }).catch((error) => reject(error));
         });
     });
 });
