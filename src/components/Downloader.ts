@@ -96,24 +96,24 @@ class Downloader extends Fetcher {
         const startAttributes = MangaAttributes.fromLink(link);
         const numberOfPages = await this.fetchNumberOfPagesInChapter(link);
         const alreadyDownloaded = fsplus.directoryHasNChildren(startAttributes.getFolderPath(this.outputDirectory), numberOfPages);
-        if(alreadyDownloaded) {
-            eventEmitter.emit("alreadydownloaded", startAttributes, link);
-            return;
-        }
-        eventEmitter.emit("start", startAttributes, link, numberOfPages);
-        for (let i = 1; i <= numberOfPages; i++) {
-            const pageLink = (i === 1) ? link : `${link}${i}.html`;
-            await this.downloadImageFromLink(pageLink, (events) => {
-                events.on('noimage', (attributes, link) => {
-                    eventEmitter.emit('noimage', attributes, link);
-                });
-                events.on("done", (attributes, path) => {
-                    eventEmitter.emit('page', attributes, numberOfPages, path);
-                });
-            });
-
-        }
         const downloadPath = startAttributes.getFolderPath(this.outputDirectory);
+
+        eventEmitter.emit("start", startAttributes, link, numberOfPages);
+
+        if (!alreadyDownloaded) {
+            for (let i = 1; i <= numberOfPages; i++) {
+                const pageLink = (i === 1) ? link : `${link}${i}.html`;
+                await this.downloadImageFromLink(pageLink, (events) => {
+                    events.on('noimage', (attributes, link) => {
+                        eventEmitter.emit('noimage', attributes, link);
+                    });
+                    events.on("done", (attributes, path) => {
+                        eventEmitter.emit('page', attributes, numberOfPages, path);
+                    });
+                });
+
+            }
+        }
         if (options?.compression) {
             eventEmitter.emit("compressing", startAttributes, downloadPath);
             const compressStats = await compress.safeCompress(this, startAttributes.manga, "chapitre", startAttributes.chapter, [downloadPath]);
