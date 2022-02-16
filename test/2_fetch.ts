@@ -39,6 +39,7 @@ describe("Fetch manga stats tests", function () {
     });
   });
   it("Fetchs one-piece volume 97 chapters", function () {
+    this.timeout(0);
     const supposedResults = [
       WEBSITE + "/lecture-en-ligne/one-piece/975/",
       WEBSITE + "/lecture-en-ligne/one-piece/976/",
@@ -129,6 +130,7 @@ describe("Fetch manga stats tests", function () {
 
 describe("fetch pages tests", function () {
   it(`Fetchs one-piece chapter 1000 pages`, function () {
+    this.timeout(0);
     const supposedResult = 15;
     return new Promise((resolve, reject) => {
       fetcher
@@ -151,6 +153,7 @@ describe("fetch pages tests", function () {
     });
   });
   it("Fetch number of pages in One Piece volume 1", function () {
+    this.timeout(0);
     return new Promise((resolve, reject) => {
       fetcher
         .fetchNumberOfPagesInChapter(

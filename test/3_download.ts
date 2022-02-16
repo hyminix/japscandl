@@ -1,7 +1,9 @@
 import fs from "fs";
 import path from "path";
 import sizeOf from "image-size";
+import fsplus from "../src/utils/fsplus";
 import Downloader from "../src/components/Downloader";
+import MangaAttributes from "../src/MangaAttributes";
 
 let downloader: Downloader;
 
@@ -64,6 +66,9 @@ function testDownloadOfManga(
           .catch((error) => reject(error));
       });
     });
+  });
+
+  describe("After download tests", function () {
     it(`folder ${mangaName}/${chapter} must exist`, function () {
       const folderPath = path.join(
         downloader.outputDirectory,
@@ -103,15 +108,18 @@ function testDownloadOfManga(
         throw new Error(compression + " was not created at " + typeName);
       }
     });
-    it(compression + " must not be 0 bytes", function () {
+    it("cbr must not be 0 bytes", function () {
+      const EMPTY_CBR_FILE_SIZE = 22;
       const typeName = downloader._getZippedFilenameFrom(
         mangaName,
         chapter.toString(),
         "chapitre"
       );
       const stats = fs.statSync(typeName);
-      if (stats.size === 0) {
-        throw new Error(compression + " has size of 0 bytes");
+      if (stats.size === EMPTY_CBR_FILE_SIZE) {
+        throw new Error(
+          compression + " has size of " + EMPTY_CBR_FILE_SIZE + " bytes"
+        );
       }
     });
 
@@ -136,6 +144,14 @@ function testDownloadOfManga(
       if (errors.length) {
         throw new Error(errors.join("\n"));
       }
+    });
+    it("Chapter should be detected as already downloaded", function () {
+      fsplus.alreadyDownloadedChapter(
+        new MangaAttributes(mangaName, chapter).getFolderPath(
+          downloader.outputDirectory
+        ),
+        numberOfPages
+      );
     });
   });
 }

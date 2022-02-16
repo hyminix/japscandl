@@ -8,12 +8,12 @@
     "url": "https://github.com/Seysa/japscandl"
   },
   "scripts": {
+    "clean:all": "npm run clean:js && npm run clean:manga",
+    "clean:js": "rm -rf js",
+    "clean:manga": "rm -rf manga",
     "start": "npm run tsc && node .",
     "build": "npm run tsc && pkg .",
-    "test": "npm run tsc && mocha js/test/ --recursive --exit",
-    "dtest": "npm run tsc && mocha js/test/download.js --exit",
-    "ftest": "npm run tsc && mocha js/test/fetch.js --exit",
-    "ctest": "npm run tsc && mocha js/test/component.js --exit",
+    "test": "npm run clean:all && npm run tsc && mocha js/test/ --recursive --exit",
     "tsc": "tsc",
     "download": "npm run tsc && node js/src/utils/chromiumDownloader.js",
     "downloadtest": "npm run tsc && node js/src/utils/chromiumDownloader.js --testing",
