@@ -26,9 +26,14 @@ const fsplus = {
     mkdirSync(path, { recursive: true });
   },
   alreadyDownloadedChapter(path: string, pages: number): boolean {
-    const files = readdirSync(path);
-    if (files.length !== pages) return false;
-    return true;
+    try {
+      const files = readdirSync(path);
+      if (files.length !== pages) return false;
+      return true;
+    } catch (e) {
+      // if error, it means that the folder doesn't exist
+      return false;
+    }
   },
   rmLocations(downloadLocations: string[]): void {
     downloadLocations.forEach((path: string) =>
