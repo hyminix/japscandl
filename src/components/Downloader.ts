@@ -49,8 +49,12 @@ class Downloader extends Fetcher {
    */
   async downloadImageFromLink(
     link: string,
-    callback?: (events: ImageDownloadEmit) => void
+    options?: {
+      forceDownload?: boolean;
+      callback?: (events: ImageDownloadEmit) => void;
+    }
   ): Promise<void> {
+    const { callback, forceDownload } = options ?? {};
     const eventEmitter = new ImageDownloadEmit(callback);
     const attributes = MangaAttributes.fromLink(link);
     eventEmitter.emit("start", attributes, link);
@@ -59,8 +63,12 @@ class Downloader extends Fetcher {
     fsplus.createPath(savePath);
     savePath = attributes.getImagePath(this.outputDirectory, this.imageFormat);
 
+    const shouldDownload = forceDownload
+      ? true
+      : !fsplus.alreadyDownloadedImage(savePath);
+
     // this is for debug purposes, it will prevent the correct behavior of the downloader
-    if (!this.mock) {
+    if (!this.mock && shouldDownload) {
       const page = await this.createExistingPage(link, "normal");
 
       const canvasElement = await this.waitForSelector(page, "body > canvas");
@@ -94,6 +102,7 @@ class Downloader extends Fetcher {
   async downloadChapterFromLink(
     link: string,
     options?: {
+      forceDownload?: boolean;
       compression?: boolean;
       deleteAfterCompression?: boolean;
       callback?: (events: ChapterDownloadEmit) => void;
@@ -102,26 +111,23 @@ class Downloader extends Fetcher {
     const eventEmitter = new ChapterDownloadEmit(options?.callback);
     const startAttributes = MangaAttributes.fromLink(link);
     const numberOfPages = await this.fetchNumberOfPagesInChapter(link);
-    const alreadyDownloaded = fsplus.alreadyDownloadedChapter(
-      startAttributes.getFolderPath(this.outputDirectory),
-      numberOfPages
-    );
     const downloadPath = startAttributes.getFolderPath(this.outputDirectory);
 
     eventEmitter.emit("start", startAttributes, link, numberOfPages);
 
-    if (!alreadyDownloaded) {
-      for (let i = 1; i <= numberOfPages; i++) {
-        const pageLink = i === 1 ? link : `${link}${i}.html`;
-        await this.downloadImageFromLink(pageLink, (events) => {
+    for (let i = 1; i <= numberOfPages; i++) {
+      const pageLink = i === 1 ? link : `${link}${i}.html`;
+      await this.downloadImageFromLink(pageLink, {
+        forceDownload: options?.forceDownload,
+        callback: (events) => {
           events.on("noimage", (attributes, link) => {
             eventEmitter.emit("noimage", attributes, link);
           });
           events.on("done", (attributes, path) => {
             eventEmitter.emit("page", attributes, numberOfPages, path);
           });
-        });
-      }
+        },
+      });
     }
     if (options?.compression) {
       eventEmitter.emit("compressing", startAttributes, downloadPath);
@@ -147,6 +153,7 @@ class Downloader extends Fetcher {
     mangaName: string,
     chapter: number,
     options?: {
+      forceDownload?: boolean;
       compression?: boolean;
       deleteAfterCompression?: boolean;
       callback?: (events: ChapterDownloadEmit) => void;
@@ -163,6 +170,7 @@ class Downloader extends Fetcher {
     mangaName: string,
     links: string[],
     options?: {
+      forceDownload?: boolean;
       compression?: boolean;
       compressAsOne?: boolean;
       deleteAfterCompression?: boolean;
@@ -184,6 +192,7 @@ class Downloader extends Fetcher {
     let i = 0;
     for (const link of links) {
       await this.downloadChapterFromLink(link, {
+        forceDownload: options?.forceDownload,
         compression: childCompression,
         callback: (events: ChapterDownloadEmit) => {
           events.on("start", (attributes, link, pages) => {
@@ -238,6 +247,7 @@ class Downloader extends Fetcher {
     start: number,
     end: number,
     options?: {
+      forceDownload?: boolean;
       compression?: boolean;
       compressAsOne?: boolean;
       deleteAfterCompression?: boolean;
@@ -262,6 +272,7 @@ class Downloader extends Fetcher {
     mangaName: string,
     volumeNumber: number,
     options?: {
+      forceDownload?: boolean;
       compression?: boolean;
       deleteAfterCompression?: boolean;
       callback?: (events: VolumeDownloadEmit) => void;
@@ -277,6 +288,7 @@ class Downloader extends Fetcher {
     eventEmitter.emit("chapters", toDownloadFrom);
 
     await this.downloadChaptersFromLinks(mangaName, toDownloadFrom, {
+      forceDownload: options?.forceDownload,
       callback: (events) => {
         events.on("startchapter", (attributes, pages, current, total) => {
           eventEmitter.emit("startchapter", attributes, pages, current, total);
@@ -323,6 +335,7 @@ class Downloader extends Fetcher {
     start: number,
     end: number,
     options?: {
+      forceDownload?: boolean;
       compression?: boolean;
       deleteAfterCompression?: boolean;
       callback?: (events: VolumesDownloadEmit) => void;
@@ -340,6 +353,7 @@ class Downloader extends Fetcher {
     for (let volumeNumber = start; volumeNumber <= end; volumeNumber++) {
       const volumeIndex = volumeNumber - start + 1;
       await this.downloadVolume(mangaName, volumeNumber, {
+        forceDownload: options?.forceDownload,
         compression,
         deleteAfterCompression,
         callback: (events) => {

@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, readdirSync, rmSync } from "fs";
+import { existsSync, mkdirSync, readdirSync, rmSync, lstatSync } from "fs";
 
 const fsplus = {
   tellIfDoesntExist(locations: string[]): boolean {
@@ -32,6 +32,13 @@ const fsplus = {
       return true;
     } catch (e) {
       // if error, it means that the folder doesn't exist
+      return false;
+    }
+  },
+  alreadyDownloadedImage(path: string): boolean {
+    try {
+      return lstatSync(path).isFile();
+    } catch (e) {
       return false;
     }
   },
