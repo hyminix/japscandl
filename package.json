@@ -1,6 +1,6 @@
 {
   "name": "japscandl",
-  "version": "2.5.0",
+  "version": "3.0.0",
   "description": "",
   "main": "js/index.js",
   "repository": {
@@ -8,31 +8,16 @@
     "url": "https://github.com/Seysa/japscandl"
   },
   "scripts": {
-    "clean:all": "npm run clean:js && npm run clean:manga",
     "clean:js": "rm -rf js",
     "clean:manga": "rm -rf manga",
     "start": "npm run tsc && node .",
     "build": "npm run tsc && pkg .",
-    "test": "npm run clean:all && npm run tsc && mocha js/test/ --recursive --exit",
-    "tsc": "tsc",
+    "test": "npm run clean:manga && npm run tsc && mocha js/test/ --recursive --exit",
+    "tsc": "npm run clean:js && tsc",
     "download": "npm run tsc && node js/src/utils/chromiumDownloader.js",
     "downloadtest": "npm run tsc && node js/src/utils/chromiumDownloader.js --testing",
     "tester": "npm run tsc && node js/src/tester.js",
     "pub": "npm run tsc && git push && npm publish"
-  },
-  "pkg": {
-    "targets": [
-      "node14-win-x64",
-      "node14-linux-x64"
-    ],
-    "outputPath": "build",
-    "assets": [
-      "node_modules/puppeteer-extra-plugin-stealth/**/*.*",
-      "js/commands/**/*.*"
-    ],
-    "scripts": [
-      "js/**/*.js"
-    ]
   },
   "bin": "js/index.js",
   "keywords": [],
