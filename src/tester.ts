@@ -1,24 +1,25 @@
 import Downloader from "./components/Downloader";
+import {
+  ChapterDownloadEmit,
+  ChaptersDownloadEmit,
+  VolumeDownloadEmit,
+} from "./utils/emitTypes";
+import fs from "fs";
+import BasicTextHandler from "./components/BasicTextHandler";
+import compress from "./utils/compress";
+
 Downloader.launch({
-    flags: {
-        fast: false,
-        visible: false,
-        timeout: 60,
-        verbose: false,
-    },
-    onEvent: {
-        onPage: (attributes, total) => {
-            console.log("onPage:", attributes.page, total)
-        },
-        onChapter: (attributes, current, total) => {
-            console.log("onChapter:", attributes, current, total);
-        },
-        onVolume: (manga, current, total) => {
-            console.log("onVolume:", manga, current, total);
-        }
-    }
+  flags: {
+    visible: false,
+    timeout: 60,
+    verbose: false,
+    mock: false,
+  },
 }).then(async (downloader) => {
-    const data = await downloader.searchManga("one-piece");
-    console.log(data);
-    await downloader.destroy();
+  await downloader.downloadChapters("one-piece", 998, 999, {
+    compression: true,
+    callback: BasicTextHandler.chaptersDownloadCallback,
+  });
+
+  downloader.destroy();
 });
