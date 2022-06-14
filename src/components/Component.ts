@@ -124,7 +124,7 @@ class Component {
    */
   _getZippedFilenameFrom(manga: string, number: string, type: string): string {
     return path.resolve(
-      `${this.outputDirectory}/${manga}/${manga}-${type}-${number}.cbr`
+      `${this.outputDirectory}/${manga}/${manga}-${type}-${number}.cbz`
     );
   }
 
