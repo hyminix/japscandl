@@ -6,6 +6,7 @@ import chrome from "../utils/chrome";
 import normalScript from "../inject/inject";
 import webtoonScript from "../inject/injectWebtoon";
 import { WEBSITE } from "../utils/variables";
+import fetch from "node-fetch";
 
 const scripts = {
   normal: normalScript,
@@ -37,6 +38,25 @@ class Component {
     this.browser = browser;
     this.outputDirectory = options?.outputDirectory ?? "manga";
     this.timeout = (options?.flags?.timeout ?? 60) * 1000;
+  }
+
+  async checkValidWebsite(website: string): Promise<boolean> {
+    try {
+      let resp = await fetch(website);
+      console.log(website, resp.status);
+      if (resp.status / 100 !== 2) {
+        return false;
+      }
+      resp = await fetch(website + "/live-search", { method: "POST" });
+      console.log(website, resp.status);
+      if (resp.status / 100 !== 2) {
+        return false;
+      }
+    } catch (e) {
+      return false;
+    }
+
+    return true;
   }
 
   /** if page exists, go to it, else throw error
