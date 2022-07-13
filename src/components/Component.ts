@@ -16,6 +16,7 @@ const scripts = {
  * Contains flags and variables needed for Fetcher and Downloader
  */
 class Component {
+  website: string;
   browser: Browser;
   timeout: number;
   outputDirectory: string;
@@ -29,13 +30,13 @@ class Component {
     options?: {
       flags?: ComponentFlags;
       outputDirectory?: string;
+      website?: string;
     }
   ) {
+    this.website = options?.website ?? WEBSITE;
     this.browser = browser;
     this.outputDirectory = options?.outputDirectory ?? "manga";
-    this.timeout = options?.flags?.timeout
-      ? options?.flags?.timeout * 1000
-      : 60 * 1000;
+    this.timeout = (options?.flags?.timeout ?? 60) * 1000;
   }
 
   /** if page exists, go to it, else throw error
@@ -102,7 +103,7 @@ class Component {
    * @returns true if link is a webtoon and false if the link is not a webtoon
    */
   async isAWebtoon(mangaName: string): Promise<boolean> {
-    const link = WEBSITE + "/manga/" + mangaName + "/";
+    const link = this.website + "/manga/" + mangaName + "/";
     const page = await this.createExistingPage(link);
     const res = await page.evaluate(() => {
       return (
@@ -132,6 +133,7 @@ class Component {
     flags?: ComponentFlags;
     outputDirectory?: string;
     chromePath?: string;
+    website?: string;
   }): Promise<Component> {
     const browser = await getBrowser(
       options?.flags?.visible ?? false,

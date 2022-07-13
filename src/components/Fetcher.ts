@@ -23,6 +23,7 @@ class Fetcher extends Component {
     options?: {
       flags?: ComponentFlags;
       outputDirectory?: string;
+      website?: string;
     }
   ) {
     super(browser, options);
@@ -150,7 +151,7 @@ class Fetcher extends Component {
    * @returns json object containing results given by japscan
    */
   async searchManga(search: string): Promise<SearchInfos[]> {
-    const resp = await fetch("https://www.japscan.ws/live-search/", {
+    const resp = await fetch(`${this.website}/live-search/`, {
       method: "POST",
       headers: {
         "User-Agent":
@@ -159,8 +160,8 @@ class Fetcher extends Component {
         "Accept-Language": "en-US,en;q=0.5",
         "X-Requested-With": "XMLHttpRequest",
         "Content-Type": "application/x-www-form-urlencoded",
-        Origin: "https://www.japscan.ws",
-        "Alt-Used": "www.japscan.ws",
+        Origin: this.website,
+        "Alt-Used": this.website.slice(8, this.website.length),
         Connection: "keep-alive",
         Pragma: "no-cache",
         "Cache-Control": "no-cache",

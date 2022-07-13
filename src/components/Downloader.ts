@@ -34,6 +34,7 @@ class Downloader extends Fetcher {
       flags?: ComponentFlags;
       outputDirectory?: string;
       imageFormat?: "jpg" | "png";
+      website?: string;
     }
   ) {
     super(browser, options);
