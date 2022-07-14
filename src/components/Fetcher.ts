@@ -155,7 +155,7 @@ class Fetcher extends Component {
     const newUrl = page.url();
     const same = newUrl === this.website;
     this.website = newUrl;
-    return same;
+    return !same;
   }
 
   /**
