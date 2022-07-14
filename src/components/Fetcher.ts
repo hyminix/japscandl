@@ -146,6 +146,19 @@ class Fetcher extends Component {
   }
 
   /**
+   * Tries to fixes this.website value if japscan changed its domain name
+   * @returns True if current website changed and was fixed, else false
+   */
+  async fixCurrentWebsite(): Promise<boolean> {
+    const page = await this.browser.newPage();
+    await page.goto(this.website);
+    const newUrl = page.url();
+    const same = newUrl === this.website;
+    this.website = newUrl;
+    return same;
+  }
+
+  /**
    * Search the `search` parameter on japscan and returns the results as an array
    * @param search string to search on japscan
    * @returns json object containing results given by japscan
