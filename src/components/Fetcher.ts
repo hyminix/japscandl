@@ -58,10 +58,18 @@ class Fetcher extends Component {
     mangaName: string
   ): Promise<Array<string>> {
     const data = await this.fetchMangaContent(mangaName);
-    const volume = data.volumes.find(
+    let volume = data.volumes.find(
       (volume) => +volume.number === volumeNumber
     );
-    if (volume === undefined) {
+    console.log("Volume not found");
+    if(!volume && volumeNumber > 0){
+      const index = data.volumes.findIndex((volume) => +volume.number === (volumeNumber-1));
+      if(data.volumes[index+1].number === "?"){
+        volume = data.volumes[index+1];
+      }
+    }
+
+    if (!volume) {
       throw new Error(
         "japdl n'a pas pu trouver le volume " +
           volumeNumber +
