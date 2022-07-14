@@ -98,7 +98,7 @@ function testDownloadOfManga(
         );
       }
     });
-    it("cbr must have been created", function () {
+    it("cbz must have been created", function () {
       const typeName = downloader._getZippedFilenameFrom(
         mangaName,
         chapter.toString(),
@@ -108,17 +108,17 @@ function testDownloadOfManga(
         throw new Error(compression + " was not created at " + typeName);
       }
     });
-    it("cbr must not be 0 bytes", function () {
-      const EMPTY_CBR_FILE_SIZE = 22;
+    it("cbz must not be 0 bytes", function () {
+      const EMPTY_CBZ_FILE_SIZE = 22;
       const typeName = downloader._getZippedFilenameFrom(
         mangaName,
         chapter.toString(),
         "chapitre"
       );
       const stats = fs.statSync(typeName);
-      if (stats.size === EMPTY_CBR_FILE_SIZE) {
+      if (stats.size === EMPTY_CBZ_FILE_SIZE) {
         throw new Error(
-          compression + " has size of " + EMPTY_CBR_FILE_SIZE + " bytes"
+          compression + " has size of " + EMPTY_CBZ_FILE_SIZE + " bytes"
         );
       }
     });

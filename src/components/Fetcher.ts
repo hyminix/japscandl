@@ -23,6 +23,7 @@ class Fetcher extends Component {
     options?: {
       flags?: ComponentFlags;
       outputDirectory?: string;
+      website?: string;
     }
   ) {
     super(browser, options);
@@ -153,12 +154,25 @@ class Fetcher extends Component {
   }
 
   /**
+   * Tries to fixes this.website value if japscan changed its domain name
+   * @returns True if current website changed and was fixed, else false
+   */
+  async fixCurrentWebsite(): Promise<boolean> {
+    const page = await this.browser.newPage();
+    await page.goto(this.website);
+    const newUrl = page.url();
+    const same = newUrl === this.website;
+    this.website = newUrl;
+    return !same;
+  }
+
+  /**
    * Search the `search` parameter on japscan and returns the results as an array
    * @param search string to search on japscan
    * @returns json object containing results given by japscan
    */
   async searchManga(search: string): Promise<SearchInfos[]> {
-    const resp = await fetch("https://www.japscan.ws/live-search/", {
+    const resp = await fetch(`${this.website}/live-search/`, {
       method: "POST",
       headers: {
         "User-Agent":
@@ -167,8 +181,8 @@ class Fetcher extends Component {
         "Accept-Language": "en-US,en;q=0.5",
         "X-Requested-With": "XMLHttpRequest",
         "Content-Type": "application/x-www-form-urlencoded",
-        Origin: "https://www.japscan.ws",
-        "Alt-Used": "www.japscan.ws",
+        Origin: this.website,
+        "Alt-Used": this.website.slice(8, this.website.length),
         Connection: "keep-alive",
         Pragma: "no-cache",
         "Cache-Control": "no-cache",

@@ -20,7 +20,7 @@ describe("Fetch manga stats tests", function () {
       synopsis:
         "Il y a dix ans, un groupe de mercenaires appelé les Seven Deadly Sins s'est rebellé contre les Chevaliers Sacrés, la garde du royaume… Depuis, ils ont disparu et personne ne sait ce qu'ils sont devenus. Un beau jour, une mystérieuse jeune fille s'écroule dans la taverne de Meliodas, un garçon enjoué qui parcourt le monde en compagnie de son cochon loquace. Cette jeune fille n'est autre que la princesse Elizabeth qui désire ardemment retrouver les Seven Deadly Sins. En effet, ce sont les seuls à même de lutter contre les Chevaliers Sacrés, qui ont fait prisonnier le roi et qui asservissent toute la population du royaume ! Très vite, elle va découvrir que Meliodas n'est pas un simple patron de taverne mais un guerrier à la puissance exceptionnelle...",
     };
-    return new Promise((resolve, reject) => {
+    return new Promise<void>((resolve, reject) => {
       fetcher.fetchStats("nanatsu-no-taizai").then((infos) => {
         const supposedResultsString = JSON.stringify(supposedResults);
         const infosString = JSON.stringify(infos);
@@ -34,7 +34,7 @@ describe("Fetch manga stats tests", function () {
             )
           );
         }
-        resolve(undefined);
+        resolve();
       });
     });
   });
@@ -52,7 +52,7 @@ describe("Fetch manga stats tests", function () {
       WEBSITE + "/lecture-en-ligne/one-piece/983/",
       WEBSITE + "/lecture-en-ligne/one-piece/984/",
     ];
-    return new Promise((resolve, reject) => {
+    return new Promise<void>((resolve, reject) => {
       const supposedResultsString = supposedResults.toString();
       fetcher.fetchVolumeChapters(97, "one-piece").then((chapters) => {
         const chaptersToString = chapters.toString();
@@ -66,7 +66,7 @@ describe("Fetch manga stats tests", function () {
             )
           );
         }
-        resolve(undefined);
+        resolve();
       });
     });
   });
@@ -85,7 +85,7 @@ describe("Fetch manga stats tests", function () {
       WEBSITE + "/lecture-en-ligne/one-piece/1004/",
       WEBSITE + "/lecture-en-ligne/one-piece/1005/",
     ];
-    return new Promise((resolve, reject) => {
+    return new Promise<void>((resolve, reject) => {
       fetcher
         .fetchChapterLinksBetweenRange("one-piece", 1000, 1005)
         .then((links) => {
@@ -106,7 +106,7 @@ describe("Fetch manga stats tests", function () {
               )
             );
           } else {
-            resolve(undefined);
+            resolve();
           }
         });
     });
@@ -132,7 +132,7 @@ describe("fetch pages tests", function () {
   it(`Fetchs one-piece chapter 1000 pages`, function () {
     this.timeout(0);
     const supposedResult = 15;
-    return new Promise((resolve, reject) => {
+    return new Promise<void>((resolve, reject) => {
       fetcher
         .fetchNumberOfPagesInChapter(
           WEBSITE + "/lecture-en-ligne/one-piece/1000/"
@@ -148,13 +148,13 @@ describe("fetch pages tests", function () {
               )
             );
           }
-          resolve(undefined);
+          resolve();
         });
     });
   });
   it("Fetch number of pages in One Piece volume 1", function () {
     this.timeout(0);
-    return new Promise((resolve, reject) => {
+    return new Promise<void>((resolve, reject) => {
       fetcher
         .fetchNumberOfPagesInChapter(
           WEBSITE + "/lecture-en-ligne/one-piece/volume-1/"
@@ -163,9 +163,27 @@ describe("fetch pages tests", function () {
           if (pages !== 206) {
             reject(new Error("Wrong fetch. Supposed: 206\nGot: " + pages));
           }
-          resolve(undefined);
+          resolve();
         })
         .catch((error) => reject(error));
+    });
+  });
+
+  it("Searches for one piece", function () {
+    this.timeout(0);
+    return new Promise<void>((resolve, reject) => {
+      fetcher.searchManga("one piece").then((search) => {
+        const onePieceManga = search[0];
+        if (onePieceManga?.japscan !== "one-piece") {
+          reject(
+            new Error(
+              "Search did not find one-piece but" +
+                JSON.stringify(onePieceManga)
+            )
+          );
+        }
+        resolve();
+      });
     });
   });
 });

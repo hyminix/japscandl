@@ -73,3 +73,42 @@ describe("is a webtoon tests", function () {
     );
   });
 });
+describe("Is a website tests", function () {
+  this.timeout(0);
+  function assertWebsite(
+    website: string,
+    expectedResult: boolean
+  ): Promise<void> {
+    return new Promise<void>((resolve, reject) => {
+      component.checkValidWebsite(website).then((res) => {
+        console.log(res, expectedResult);
+        if (res !== expectedResult) {
+          reject(
+            new Error(
+              `${website} should ${expectedResult ? "" : "not"} be valid`
+            )
+          );
+        }
+        resolve();
+      });
+    });
+  }
+  it("Check valid website", function () {
+    return assertWebsite("https://japscan.me", true);
+  });
+  it("Check invalid website", function () {
+    return assertWebsite("japscan.me", false);
+  });
+  it("Check invalid website", function () {
+    return assertWebsite("https://japscan", false);
+  });
+  it("Check invalid website", function () {
+    return assertWebsite("https://japscan.ws", true);
+  });
+  it("Check invalid website", function () {
+    return assertWebsite("https://japscan.se", true);
+  });
+  it("Check invalid website", function () {
+    return assertWebsite("https://japscan.co", true);
+  });
+});

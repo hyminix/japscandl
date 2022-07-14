@@ -34,6 +34,7 @@ class Downloader extends Fetcher {
       flags?: ComponentFlags;
       outputDirectory?: string;
       imageFormat?: "jpg" | "png";
+      website?: string;
     }
   ) {
     super(browser, options);
@@ -239,7 +240,7 @@ class Downloader extends Fetcher {
    * @param mangaName manga name
    * @param start start chapter
    * @param end end chapter
-   * @param compression defaults as true, if true the downloaded images are compressed as a cbr after downloading
+   * @param compression defaults as true, if true the downloaded images are compressed as a cbz after downloading
    * @returns download locations as an array
    */
   async downloadChapters(
@@ -266,7 +267,7 @@ class Downloader extends Fetcher {
    *
    * @param mangaName manga name
    * @param volumeNumber volume number
-   * @param compression defaults as true, if true the downloaded images are compressed as a cbr after downloading
+   * @param compression defaults as true, if true the downloaded images are compressed as a cbz after downloading
    */
   async downloadVolume(
     mangaName: string,
@@ -327,7 +328,7 @@ class Downloader extends Fetcher {
    * @param mangaName manga name
    * @param start start chapter
    * @param end end chapter
-   * @param compression defaults as true, if true the downloaded images are compressed as a cbr after downloading
+   * @param compression defaults as true, if true the downloaded images are compressed as a cbz after downloading
    * @returns array of download locations for each volume
    */
   async downloadVolumes(

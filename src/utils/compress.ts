@@ -32,7 +32,7 @@ const compress = {
     fetcher: Fetcher,
     mangaName: string,
     format: "chapitre" | "volume",
-    type: "cbr",
+    type: "cbz",
     start: number,
     end?: number
   ): Promise<void> {

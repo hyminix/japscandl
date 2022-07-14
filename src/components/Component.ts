@@ -6,6 +6,7 @@ import chrome from "../utils/chrome";
 import normalScript from "../inject/inject";
 import webtoonScript from "../inject/injectWebtoon";
 import { WEBSITE } from "../utils/variables";
+import fetch from "node-fetch";
 
 const scripts = {
   normal: normalScript,
@@ -16,6 +17,7 @@ const scripts = {
  * Contains flags and variables needed for Fetcher and Downloader
  */
 class Component {
+  website: string;
   browser: Browser;
   timeout: number;
   outputDirectory: string;
@@ -29,13 +31,32 @@ class Component {
     options?: {
       flags?: ComponentFlags;
       outputDirectory?: string;
+      website?: string;
     }
   ) {
+    this.website = options?.website ?? WEBSITE;
     this.browser = browser;
     this.outputDirectory = options?.outputDirectory ?? "manga";
-    this.timeout = options?.flags?.timeout
-      ? options?.flags?.timeout * 1000
-      : 60 * 1000;
+    this.timeout = (options?.flags?.timeout ?? 60) * 1000;
+  }
+
+  async checkValidWebsite(website: string): Promise<boolean> {
+    try {
+      let resp = await fetch(website);
+      console.log(website, resp.status);
+      if (resp.status / 100 !== 2) {
+        return false;
+      }
+      resp = await fetch(website + "/live-search", { method: "POST" });
+      console.log(website, resp.status);
+      if (resp.status / 100 !== 2) {
+        return false;
+      }
+    } catch (e) {
+      return false;
+    }
+
+    return true;
   }
 
   /** if page exists, go to it, else throw error
@@ -102,7 +123,7 @@ class Component {
    * @returns true if link is a webtoon and false if the link is not a webtoon
    */
   async isAWebtoon(mangaName: string): Promise<boolean> {
-    const link = WEBSITE + "/manga/" + mangaName + "/";
+    const link = this.website + "/manga/" + mangaName + "/";
     const page = await this.createExistingPage(link);
     const res = await page.evaluate(() => {
       return (
@@ -124,7 +145,7 @@ class Component {
    */
   _getZippedFilenameFrom(manga: string, number: string, type: string): string {
     return path.resolve(
-      `${this.outputDirectory}/${manga}/${manga}-${type}-${number}.cbr`
+      `${this.outputDirectory}/${manga}/${manga}-${type}-${number}.cbz`
     );
   }
 
@@ -132,6 +153,7 @@ class Component {
     flags?: ComponentFlags;
     outputDirectory?: string;
     chromePath?: string;
+    website?: string;
   }): Promise<Component> {
     const browser = await getBrowser(
       options?.flags?.visible ?? false,
