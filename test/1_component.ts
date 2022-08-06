@@ -73,7 +73,7 @@ describe("is a webtoon tests", function () {
     );
   });
 });
-describe("Is a website tests", function () {
+describe.skip("Is a website tests", function () {
   this.timeout(0);
   function assertWebsite(
     website: string,
