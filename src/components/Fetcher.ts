@@ -223,6 +223,7 @@ class Fetcher extends Component {
         Node.DOCUMENT_POSITION_PRECEDING;
       for (let i = 0; i < chapters.length; i++) {
         const volumeAt = volumes[isAVolumeMissing ? i - 1 : i];
+        if (!volumeAt) continue;
         const chaptersResult: { name: string; link: string }[] = [];
         const aEls = chapters.item(i).querySelectorAll("div > a");
         aEls.forEach((el) => {
