@@ -59,14 +59,13 @@ class Fetcher extends Component {
     mangaName: string
   ): Promise<Array<string>> {
     const data = await this.fetchMangaContent(mangaName);
-    let volume = data.volumes.find(
-      (volume) => +volume.number === volumeNumber
-    );
-    console.log("Volume not found");
-    if(!volume && volumeNumber > 0){
-      const index = data.volumes.findIndex((volume) => +volume.number === (volumeNumber-1));
-      if(data.volumes[index+1].number === "?"){
-        volume = data.volumes[index+1];
+    let volume = data.volumes.find((volume) => +volume.number === volumeNumber);
+    if (!volume && volumeNumber > 0) {
+      const index = data.volumes.findIndex(
+        (volume) => +volume.number === volumeNumber - 1
+      );
+      if (data.volumes[index + 1].number === "?") {
+        volume = data.volumes[index + 1];
       }
     }
 
@@ -230,8 +229,14 @@ class Fetcher extends Component {
         volumes[0].compareDocumentPosition(chapters[0]) &
         Node.DOCUMENT_POSITION_PRECEDING;
       for (let i = 0; i < chapters.length; i++) {
-        const volumeAt = volumes[isAVolumeMissing ? i - 1 : i];
-        if (!volumeAt) continue;
+        // if i == 0 then 0 - false = 0
+        // else i - 1
+        const index = isAVolumeMissing ? i - Number(i !== 0) : i;
+        const volumeAt = volumes[index];
+
+        if (!volumeAt) {
+          continue;
+        }
         const chaptersResult: { name: string; link: string }[] = [];
         const aEls = chapters.item(i).querySelectorAll("div > a");
         aEls.forEach((el) => {
@@ -291,7 +296,7 @@ class Fetcher extends Component {
       }
     );
     // close page if we created it earlier
-    if (closePage) page.close();
+    // if (closePage) page.close();
 
     return {
       display: displayName,
