@@ -40,7 +40,12 @@ class MangaAttributes {
   }
 
   public getFilename(format: "jpg" | "png"): string {
-    return `${this.chapter}_${this.page}.${format}`;
+    const DIGITS = 3;
+    let addedZeros = DIGITS - this.page.length;
+    // this prevents error if page has more than 3 digits
+    if (addedZeros < 0) addedZeros = 0;
+    const pageOn3Digits = "0".repeat(addedZeros) + this.page;
+    return `${this.chapter}_${pageOn3Digits}.${format}`;
   }
 
   public getImagePath(outputDirectory: string, format: "jpg" | "png"): string {
