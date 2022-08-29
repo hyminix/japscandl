@@ -296,7 +296,7 @@ class Fetcher extends Component {
       }
     );
     // close page if we created it earlier
-    // if (closePage) page.close();
+    if (closePage) page.close();
 
     return {
       display: displayName,
