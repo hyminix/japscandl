@@ -1,4 +1,5 @@
 import path from "path";
+import { toNDigits } from "./utils/digits";
 import { WEBSITE } from "./utils/variables";
 
 class MangaAttributes {
@@ -40,12 +41,7 @@ class MangaAttributes {
   }
 
   public getFilename(format: "jpg" | "png"): string {
-    const DIGITS = 3;
-    let addedZeros = DIGITS - this.page.length;
-    // this prevents error if page has more than 3 digits
-    if (addedZeros < 0) addedZeros = 0;
-    const pageOn3Digits = "0".repeat(addedZeros) + this.page;
-    return `${this.chapter}_${pageOn3Digits}.${format}`;
+    return `${this.chapter}_${toNDigits(this.page, 3)}.${format}`;
   }
 
   public getImagePath(outputDirectory: string, format: "jpg" | "png"): string {

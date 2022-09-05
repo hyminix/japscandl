@@ -1,12 +1,5 @@
-import Downloader from "./components/Downloader";
-import {
-  ChapterDownloadEmit,
-  ChaptersDownloadEmit,
-  VolumeDownloadEmit,
-} from "./utils/emitTypes";
-import fs from "fs";
 import BasicTextHandler from "./components/BasicTextHandler";
-import compress from "./utils/compress";
+import Downloader from "./components/Downloader";
 
 Downloader.launch({
   flags: {
@@ -16,9 +9,9 @@ Downloader.launch({
     mock: false,
   },
 }).then(async (downloader) => {
-  await downloader.downloadChapter("one-piece", 998, {
+  await downloader.downloadVolume("one-piece", 1, {
     compression: true,
-    callback: BasicTextHandler.chapterDownloadCallback,
+    callback: BasicTextHandler.volumeDownloadCallback,
   });
 
   downloader.destroy();
