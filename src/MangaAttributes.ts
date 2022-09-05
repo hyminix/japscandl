@@ -37,7 +37,14 @@ class MangaAttributes {
   }
 
   public getFolderPath(outputDirectory: string): string {
-    return `${outputDirectory}/${this.manga}/${toNDigits(this.chapter, 4)}/`;
+    let folderName;
+    if (this.chapter.includes("volume")) {
+      const volumeNumber = this.chapter.replace("volume-", "");
+      folderName = `volume-${toNDigits(volumeNumber, 3)}`;
+    } else {
+      folderName = toNDigits(this.chapter, 4);
+    }
+    return `${outputDirectory}/${this.manga}/${folderName}/`;
   }
 
   public getFilename(format: "jpg" | "png"): string {
