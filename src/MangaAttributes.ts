@@ -37,7 +37,7 @@ class MangaAttributes {
   }
 
   public getFolderPath(outputDirectory: string): string {
-    return `${outputDirectory}/${this.manga}/${this.chapter}/`;
+    return `${outputDirectory}/${this.manga}/${toNDigits(this.chapter, 4)}/`;
   }
 
   public getFilename(format: "jpg" | "png"): string {

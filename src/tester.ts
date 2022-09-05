@@ -9,9 +9,9 @@ Downloader.launch({
     mock: false,
   },
 }).then(async (downloader) => {
-  await downloader.downloadVolume("one-piece", 1, {
+  await downloader.downloadChapter("one-piece", 998, {
     compression: true,
-    callback: BasicTextHandler.volumeDownloadCallback,
+    callback: BasicTextHandler.chapterDownloadCallback,
   });
 
   downloader.destroy();
