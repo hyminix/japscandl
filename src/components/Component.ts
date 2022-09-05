@@ -1,12 +1,13 @@
-import { Browser, ElementHandle, Page, Response } from "puppeteer";
+import fetch from "node-fetch";
 import path from "path";
-import { ComponentFlags } from "../utils/types";
-import getBrowser from "../utils/browser";
-import chrome from "../utils/chrome";
+import { Browser, ElementHandle, Page, Response } from "puppeteer";
 import normalScript from "../inject/inject";
 import webtoonScript from "../inject/injectWebtoon";
+import getBrowser from "../utils/browser";
+import chrome from "../utils/chrome";
+import { toNDigits } from "../utils/digits";
+import { ComponentFlags } from "../utils/types";
 import { WEBSITE } from "../utils/variables";
-import fetch from "node-fetch";
 
 const scripts = {
   normal: normalScript,
@@ -144,8 +145,15 @@ class Component {
    * @returns zipped path
    */
   _getZippedFilenameFrom(manga: string, number: string, type: string): string {
+    /* if type is volume then number is on 3 digits
+     * if type is chapter then number is on 4 digits
+     */
+    const digits = type === "volume" ? 3 : 4;
     return path.resolve(
-      `${this.outputDirectory}/${manga}/${manga}-${type}-${number}.cbz`
+      `${this.outputDirectory}/${manga}/${manga}-${type}-${toNDigits(
+        number,
+        digits
+      )}.cbz`
     );
   }
 
