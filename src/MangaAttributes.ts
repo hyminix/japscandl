@@ -48,7 +48,7 @@ class MangaAttributes {
   }
 
   public getFilename(format: "jpg" | "png"): string {
-    return `${this.chapter}_${toNDigits(this.page, 3)}.${format}`;
+    return `${toNDigits(this.chapter, 4)}_${toNDigits(this.page, 3)}.${format}`;
   }
 
   public getImagePath(outputDirectory: string, format: "jpg" | "png"): string {
