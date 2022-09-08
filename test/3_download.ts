@@ -1,9 +1,8 @@
 import fs from "fs";
-import path from "path";
 import sizeOf from "image-size";
-import fsplus from "../src/utils/fsplus";
 import Downloader from "../src/components/Downloader";
 import MangaAttributes from "../src/MangaAttributes";
+import fsplus from "../src/utils/fsplus";
 
 let downloader: Downloader;
 
@@ -35,6 +34,11 @@ function testDownloadOfManga(
   pageToCheck: { number: number; height: number; width: number },
   compression: boolean
 ) {
+  const attributes = new MangaAttributes(
+    mangaName,
+    chapter,
+    pageToCheck.number
+  );
   describe(`Downloading ${mangaName} chapter ${chapter}`, function () {
     this.timeout(1000 * 60 * 5); // 5 minutes
     this.afterEach(
@@ -70,11 +74,7 @@ function testDownloadOfManga(
 
   describe("After download tests", function () {
     it(`folder ${mangaName}/${chapter} must exist`, function () {
-      const folderPath = path.join(
-        downloader.outputDirectory,
-        mangaName,
-        chapter.toString()
-      );
+      const folderPath = attributes.getFolderPath(downloader.outputDirectory);
       if (!fs.existsSync(folderPath)) {
         throw new Error(
           "Folder " + folderPath + " was not created after download"
@@ -82,11 +82,7 @@ function testDownloadOfManga(
       }
     });
     it(`downloaded ${mangaName} must have ${numberOfPages} pages`, function () {
-      const downloadedAt = path.join(
-        downloader.outputDirectory,
-        mangaName,
-        chapter.toString()
-      );
+      const downloadedAt = attributes.getFolderPath(downloader.outputDirectory);
       const numberOfImages = fs.readdirSync(downloadedAt).length;
       if (numberOfImages !== numberOfPages) {
         throw new Error(
@@ -124,12 +120,11 @@ function testDownloadOfManga(
     });
 
     it(`Page ${pageToCheck.number} must have correct size`, function () {
-      const { height, width } = sizeOf(
-        path.join(
-          __dirname,
-          `../../manga/${mangaName}/${chapter}/${chapter}_${pageToCheck.number}.${downloader.imageFormat}`
-        )
+      const imagePath = attributes.getImagePath(
+        downloader.outputDirectory,
+        downloader.imageFormat
       );
+      const { height, width } = sizeOf(imagePath);
       const errors: string[] = [];
       if (height !== pageToCheck.height) {
         errors.push(

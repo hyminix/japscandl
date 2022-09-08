@@ -1,11 +1,9 @@
 import { Browser } from "puppeteer";
 // utils
-import compress from "../utils/compress";
-import fsplus from "../utils/fsplus";
-import Fetcher from "./Fetcher";
+import MangaAttributes from "../MangaAttributes";
 import getBrowser from "../utils/browser";
 import chrome from "../utils/chrome";
-import { ComponentFlags } from "../utils/types";
+import compress from "../utils/compress";
 import {
   ChapterDownloadEmit,
   ChaptersDownloadEmit,
@@ -13,7 +11,9 @@ import {
   VolumeDownloadEmit,
   VolumesDownloadEmit,
 } from "../utils/emitTypes";
-import MangaAttributes from "../MangaAttributes";
+import fsplus from "../utils/fsplus";
+import { ComponentFlags } from "../utils/types";
+import Fetcher from "./Fetcher";
 
 /**
  * Japscan downloader class, usually used with an interface
@@ -178,12 +178,9 @@ class Downloader extends Fetcher {
       callback?: (events: ChaptersDownloadEmit) => void;
     }
   ): Promise<void> {
-    const { compression, compressAsOne, callback } = options ?? {};
-    const childCompression = !compression
-      ? false
-      : !compressAsOne
-      ? true
-      : false;
+    const { compression, compressAsOne, deleteAfterCompression, callback } =
+      options ?? {};
+    const childCompression = !compression ? false : !compressAsOne;
     const startNumber = MangaAttributes.fromLink(links[0]).chapter;
     const endNumber = MangaAttributes.fromLink(links[links.length - 1]).chapter;
     const eventEmitter = new ChaptersDownloadEmit(callback);
@@ -195,6 +192,9 @@ class Downloader extends Fetcher {
       await this.downloadChapterFromLink(link, {
         forceDownload: options?.forceDownload,
         compression: childCompression,
+        deleteAfterCompression: !childCompression
+          ? false
+          : deleteAfterCompression,
         callback: (events: ChapterDownloadEmit) => {
           events.on("start", (attributes, link, pages) => {
             eventEmitter.emit(
@@ -230,8 +230,9 @@ class Downloader extends Fetcher {
         chapterDownloadLocations,
         compressStats
       );
-      if (options?.deleteAfterCompression)
+      if (deleteAfterCompression) {
         fsplus.rmLocations(chapterDownloadLocations);
+      }
     }
     eventEmitter.emit("done", mangaName, chapterDownloadLocations);
   }
