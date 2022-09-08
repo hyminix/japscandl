@@ -4,6 +4,7 @@ import MangaAttributes from "../MangaAttributes";
 import getBrowser from "../utils/browser";
 import chrome from "../utils/chrome";
 import compress from "../utils/compress";
+import { toNDigits } from "../utils/digits";
 import {
   ChapterDownloadEmit,
   ChaptersDownloadEmit,
@@ -220,8 +221,8 @@ class Downloader extends Fetcher {
       const compressStats = await compress.safeCompress(
         this,
         mangaName,
-        "chapitres",
-        `${startNumber}-${endNumber}`,
+        "chapitre",
+        `${toNDigits(startNumber, 4)}-${toNDigits(endNumber, 4)}`,
         chapterDownloadLocations
       );
       eventEmitter.emit(
@@ -311,7 +312,7 @@ class Downloader extends Fetcher {
               this,
               manga,
               "volume",
-              volumeNumber.toString(),
+              toNDigits(volumeNumber, 3),
               locations
             );
             if (options?.deleteAfterCompression) {
