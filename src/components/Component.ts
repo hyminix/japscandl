@@ -69,7 +69,67 @@ class Component {
     link: string,
     script?: "normal" | "webtoon"
   ): Promise<Page> {
+    let hasAnImage = false;
+    const shouldAbort = (url: string) => {
+      const ABORT = true;
+      const VALID = false;
+
+      // next page
+      if (url.includes("/lecture-en-ligne/") && url !== link) {
+        return ABORT;
+      }
+
+      const banned = [
+        "bootstrap",
+        "yandex.ru",
+        "creepingbrings.com",
+        "rusticswollenbelonged",
+        "popper.min.js",
+        "email-decode.min.js",
+        "code.jquery.com",
+        "ujs",
+      ];
+      for (const ban of banned) {
+        if (url.includes(ban)) {
+          return ABORT;
+        }
+      }
+      const needed = ["https://cdn.statically.io/img/c.japscan.ws/", link];
+      const imageLink = "https://cdn.statically.io/img/c.japscan.ws/";
+      if (url.includes(imageLink)) {
+        if (!hasAnImage) {
+          hasAnImage = true;
+          return VALID;
+        } else {
+          return ABORT;
+        }
+      }
+      let one = false;
+      for (const need of needed) {
+        if (url.includes(need)) {
+          one = true;
+          break;
+        }
+      }
+      if (!one && !url.endsWith(".js")) return ABORT;
+      // here should validate .js files that are not banned
+      return VALID;
+    };
+
     const page = await this.browser.newPage();
+    page.setRequestInterception(true);
+    page.removeAllListeners("request");
+    page.on("request", (request) => {
+      try {
+        if (shouldAbort(request.url())) {
+          request.abort();
+          return;
+        }
+        request.continue();
+      } catch (e) {
+        console.error("ERROR:", e);
+      }
+    });
     await this._goToExistingPage(page, link, script);
     return page;
   }

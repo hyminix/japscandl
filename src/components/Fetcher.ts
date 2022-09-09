@@ -1,5 +1,8 @@
+import fetch from "node-fetch";
 import { Browser, Page } from "puppeteer";
-import Component from "./Component";
+import MangaAttributes from "../MangaAttributes";
+import getBrowser from "../utils/browser";
+import chrome from "../utils/chrome";
 import {
   Chapter,
   ComponentFlags,
@@ -8,10 +11,7 @@ import {
   SearchInfos,
   Volume,
 } from "../utils/types";
-import getBrowser from "../utils/browser";
-import chrome from "../utils/chrome";
-import fetch from "node-fetch";
-import MangaAttributes from "../MangaAttributes";
+import Component from "./Component";
 
 class Fetcher extends Component {
   /**
@@ -212,7 +212,7 @@ class Fetcher extends Component {
     }
     // applies to wrong url pages and new pages
     if (page.url() !== link) {
-      await page.goto(link);
+      await this._goToExistingPage(page, link);
     }
     // div containing everything
     const chaptersList = await page.$("#chapters_list");
