@@ -22,6 +22,7 @@ class Component {
   browser: Browser;
   timeout: number;
   outputDirectory: string;
+  fast: boolean;
 
   /**
    * @param browser puppeteer browser the component is going to use
@@ -39,6 +40,7 @@ class Component {
     this.browser = browser;
     this.outputDirectory = options?.outputDirectory ?? "manga";
     this.timeout = (options?.flags?.timeout ?? 60) * 1000;
+    this.fast = options?.flags?.fast ?? false;
   }
 
   async checkValidWebsite(website: string): Promise<boolean> {
@@ -71,12 +73,9 @@ class Component {
   ): Promise<Page> {
     let hasAnImage = false;
     const shouldAbort = (url: string) => {
-      const ABORT = true;
-      const VALID = false;
-
       // next page
       if (url.includes("/lecture-en-ligne/") && url !== link) {
-        return ABORT;
+        return true;
       }
 
       const banned = [
@@ -91,7 +90,7 @@ class Component {
       ];
       for (const ban of banned) {
         if (url.includes(ban)) {
-          return ABORT;
+          return true;
         }
       }
       const needed = ["https://cdn.statically.io/img/c.japscan.ws/", link];
@@ -99,9 +98,9 @@ class Component {
       if (url.includes(imageLink)) {
         if (!hasAnImage) {
           hasAnImage = true;
-          return VALID;
+          return false;
         } else {
-          return ABORT;
+          return true;
         }
       }
       let one = false;
@@ -111,25 +110,27 @@ class Component {
           break;
         }
       }
-      if (!one && !url.endsWith(".js")) return ABORT;
+      if (!one && !url.endsWith(".js")) return true;
       // here should validate .js files that are not banned
-      return VALID;
+      return false;
     };
 
     const page = await this.browser.newPage();
-    page.setRequestInterception(true);
-    page.removeAllListeners("request");
-    page.on("request", (request) => {
-      try {
-        if (shouldAbort(request.url())) {
-          request.abort();
-          return;
+    if (this.fast) {
+      page.setRequestInterception(true);
+      page.removeAllListeners("request");
+      page.on("request", (request) => {
+        try {
+          if (shouldAbort(request.url())) {
+            request.abort();
+            return;
+          }
+          request.continue();
+        } catch (e) {
+          console.error("ERROR:", e);
         }
-        request.continue();
-      } catch (e) {
-        console.error("ERROR:", e);
-      }
-    });
+      });
+    }
     await this._goToExistingPage(page, link, script);
     return page;
   }

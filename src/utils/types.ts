@@ -31,6 +31,7 @@ export type ComponentFlags = {
   timeout?: number;
   visible?: boolean;
   mock?: boolean;
+  fast?: boolean;
 };
 
 export type MangaContent = {
