@@ -71,10 +71,13 @@ class Component {
     link: string,
     script?: "normal" | "webtoon"
   ): Promise<Page> {
-    let hasAnImage = false;
+    let alreadyLoadedImage = false;
     const shouldAbort = (url: string) => {
-      // next page
-      if (url.includes("/lecture-en-ligne/") && url !== link) {
+      // if current page, allow
+      if (url === link) {
+        return false;
+      } else if (url.includes("/lecture-en-ligne/")) {
+        // next page should not be loaded
         return true;
       }
 
@@ -93,24 +96,16 @@ class Component {
           return true;
         }
       }
-      const needed = ["https://cdn.statically.io/img/c.japscan.ws/", link];
       const imageLink = "https://cdn.statically.io/img/c.japscan.ws/";
       if (url.includes(imageLink)) {
-        if (!hasAnImage) {
-          hasAnImage = true;
+        if (!alreadyLoadedImage) {
+          alreadyLoadedImage = true;
           return false;
         } else {
           return true;
         }
       }
-      let one = false;
-      for (const need of needed) {
-        if (url.includes(need)) {
-          one = true;
-          break;
-        }
-      }
-      if (!one && !url.endsWith(".js")) return true;
+      if (!url.endsWith(".js")) return true;
       // here should validate .js files that are not banned
       return false;
     };
