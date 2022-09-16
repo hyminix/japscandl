@@ -65,9 +65,8 @@ class Downloader extends Fetcher {
     fsplus.createPath(savePath);
     savePath = attributes.getImagePath(this.outputDirectory, this.imageFormat);
 
-    const shouldDownload = forceDownload
-      ? true
-      : !fsplus.alreadyDownloadedImage(savePath);
+    const shouldDownload =
+      forceDownload || !fsplus.alreadyDownloadedImage(savePath);
 
     // this is for debug purposes, it will prevent the correct behavior of the downloader
     if (!this.mock && shouldDownload) {
