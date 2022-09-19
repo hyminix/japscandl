@@ -89,7 +89,6 @@ class Component {
         "popper.min.js",
         "email-decode.min.js",
         "code.jquery.com",
-        "ujs",
       ];
       for (const ban of banned) {
         if (url.includes(ban)) {
