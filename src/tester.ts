@@ -1,3 +1,4 @@
+import BasicTextHandler from "./components/BasicTextHandler";
 import Downloader from "./components/Downloader";
 
 let start: Date = new Date();
@@ -12,26 +13,14 @@ function endTimer() {
 }
 
 (async () => {
-  let downloader = await Downloader.launch({
+  const downloader = await Downloader.launch({
     flags: {
+      visible: true,
       fast: true,
     },
   });
-  console.log("----- FAST -----");
-  startTimer();
-  await downloader.downloadChapters("one-piece", 998, 999, {
-    forceDownload: true,
+  await downloader.downloadVolume("bleach", 1, {
+    callback: BasicTextHandler.volumeDownloadCallback,
   });
-  endTimer();
-  await downloader.destroy();
-
-  downloader = await Downloader.launch();
-  console.log("----- SLOW -----");
-  startTimer();
-  await downloader.downloadChapters("one-piece", 998, 999, {
-    forceDownload: true,
-  });
-  endTimer();
-
   await downloader.destroy();
 })();

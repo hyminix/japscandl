@@ -71,7 +71,6 @@ class Component {
     link: string,
     script?: "normal" | "webtoon"
   ): Promise<Page> {
-    let alreadyLoadedImage = false;
     const shouldAbort = (url: string) => {
       // if current page, allow
       if (url === link) {
@@ -95,14 +94,9 @@ class Component {
           return true;
         }
       }
-      const imageLink = "https://cdn.statically.io/img/c.japscan.ws/";
+      const imageLink = "/c.japscan";
       if (url.includes(imageLink)) {
-        if (!alreadyLoadedImage) {
-          alreadyLoadedImage = true;
-          return false;
-        } else {
-          return true;
-        }
+        return false;
       }
       if (!url.endsWith(".js")) return true;
       // here should validate .js files that are not banned
