@@ -19,8 +19,13 @@ function endTimer() {
       fast: true,
     },
   });
-  await downloader.downloadVolume("bleach", 1, {
+  await downloader.downloadVolume("one-piece", 1, {
     callback: BasicTextHandler.volumeDownloadCallback,
   });
   await downloader.destroy();
+  process.on("SIGINT", () => {
+    downloader.destroy().then(() => {
+      process.exit(1);
+    });
+  });
 })();
