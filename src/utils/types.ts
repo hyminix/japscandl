@@ -58,4 +58,5 @@ export type SearchInfos = {
   name: string;
   url: string;
   japscan: string;
+  alternate_names: string;
 };
