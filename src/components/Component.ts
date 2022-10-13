@@ -6,7 +6,7 @@ import webtoonScript from "../inject/injectWebtoon";
 import getBrowser from "../utils/browser";
 import chrome from "../utils/chrome";
 import { toNDigits } from "../utils/digits";
-import { ComponentFlags } from "../utils/types";
+import { ComponentOptions } from "../utils/types";
 import { WEBSITE } from "../utils/variables";
 
 const scripts = {
@@ -28,14 +28,7 @@ class Component {
    * @param browser puppeteer browser the component is going to use
    * @param options optional options, contains flags and outputDirectory
    */
-  constructor(
-    browser: Browser,
-    options?: {
-      flags?: ComponentFlags;
-      outputDirectory?: string;
-      website?: string;
-    }
-  ) {
+  constructor(browser: Browser, options?: ComponentOptions) {
     this.website = options?.website ?? WEBSITE;
     this.browser = browser;
     this.outputDirectory = options?.outputDirectory ?? "manga";
@@ -212,12 +205,9 @@ class Component {
     );
   }
 
-  static async launch(options?: {
-    flags?: ComponentFlags;
-    outputDirectory?: string;
-    chromePath?: string;
-    website?: string;
-  }): Promise<Component> {
+  static async launch(
+    options?: ComponentOptions & { chromePath?: string }
+  ): Promise<Component> {
     const browser = await getBrowser(
       options?.flags?.visible ?? false,
       chrome.getChromePath(options?.chromePath)

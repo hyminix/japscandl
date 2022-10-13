@@ -5,7 +5,7 @@ import getBrowser from "../utils/browser";
 import chrome from "../utils/chrome";
 import {
   Chapter,
-  ComponentFlags,
+  ComponentOptions,
   MangaContent,
   MangaInfos,
   SearchInfos,
@@ -18,14 +18,7 @@ class Fetcher extends Component {
    * @param browser Browser the downloader is going to use
    * @param options optional options, which are flags and outputDirectory
    */
-  constructor(
-    browser: Browser,
-    options?: {
-      flags?: ComponentFlags;
-      outputDirectory?: string;
-      website?: string;
-    }
-  ) {
+  constructor(browser: Browser, options?: ComponentOptions) {
     super(browser, options);
   }
   /**
@@ -306,11 +299,9 @@ class Fetcher extends Component {
     };
   }
 
-  static async launch(options?: {
-    flags?: ComponentFlags;
-    outputDirectory?: string;
-    chromePath?: string;
-  }): Promise<Fetcher> {
+  static async launch(
+    options?: ComponentOptions & { chromePath?: string }
+  ): Promise<Fetcher> {
     const browser = await getBrowser(
       options?.flags?.visible ?? false,
       chrome.getChromePath(options?.chromePath)

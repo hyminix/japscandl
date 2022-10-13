@@ -59,3 +59,13 @@ export type SearchInfos = {
   url: string;
   japscan: string;
 };
+
+export type ComponentOptions = {
+  flags?: ComponentFlags;
+  outputDirectory?: string;
+  website?: string;
+};
+
+export type DownloaderOptions = ComponentOptions & {
+  imageFormat?: "jpg" | "png";
+};

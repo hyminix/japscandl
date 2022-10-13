@@ -13,7 +13,8 @@ import {
   VolumesDownloadEmit,
 } from "../utils/emitTypes";
 import fsplus from "../utils/fsplus";
-import { ComponentFlags } from "../utils/types";
+import { DownloaderOptions } from "../utils/types";
+import { getJapscanFromGithub } from "../utils/website";
 import Fetcher from "./Fetcher";
 
 /**
@@ -29,15 +30,7 @@ class Downloader extends Fetcher {
    * @param options Can take definitions of onEvent callbacks in onEvent property, default are empty callbacks.
    * @param browser Browser the downloader is going to use
    */
-  constructor(
-    browser: Browser,
-    options?: {
-      flags?: ComponentFlags;
-      outputDirectory?: string;
-      imageFormat?: "jpg" | "png";
-      website?: string;
-    }
-  ) {
+  constructor(browser: Browser, options?: DownloaderOptions) {
     super(browser, options);
     this.imageFormat = options?.imageFormat ?? "jpg";
 
@@ -427,16 +420,19 @@ class Downloader extends Fetcher {
 
     */
 
-  static async launch(options?: {
-    chromePath?: string;
-    flags?: ComponentFlags;
-    outputDirectory?: string;
-    imageFormat?: "png" | "jpg";
-  }): Promise<Downloader> {
+  static async launch(
+    options?: DownloaderOptions & { chromePath?: string }
+  ): Promise<Downloader> {
     const browser = await getBrowser(
       options?.flags?.visible ?? false,
       chrome.getChromePath(options?.chromePath)
     );
+    if (!options?.website) {
+      const currentWebsite = await getJapscanFromGithub();
+      console.log("Options was", options);
+      options = Object.assign(options ?? {}, { website: currentWebsite });
+      console.log("Now is", options);
+    }
     return new this(browser, options);
   }
 
