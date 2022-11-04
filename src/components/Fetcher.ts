@@ -129,14 +129,14 @@ class Fetcher extends Component {
   async fetchNumberOfPagesInChapter(link: string): Promise<number> {
     const startPage = await this.createExistingPage(link);
     const chapterSelectSelector =
-      "div.div-select:nth-child(2) > .ss-main > .ss-content > .ss-list";
+      "#pages";
     const chapterSelect = await this.waitForSelector(
       startPage,
       chapterSelectSelector
     );
     if (!chapterSelect) {
       await startPage.close();
-      return await this.fetchNumberOfPagesInChapter(link);
+      throw new Error("Couldn't find element for pages");
     }
     const numberOfPages = await chapterSelect.evaluate(
       (el) => el.childElementCount
