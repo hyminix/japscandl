@@ -221,7 +221,7 @@ class Component {
   ): Promise<ElementHandle<Element> | false> {
     return new Promise((resolve) => {
       page
-        .waitForSelector(selector)
+        .waitForSelector(selector, {timeout: this.timeout})
         .then((element) => {
           resolve(element);
         })
