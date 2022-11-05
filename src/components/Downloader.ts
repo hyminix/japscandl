@@ -16,6 +16,7 @@ import fsplus from "../utils/fsplus";
 import { DownloaderOptions } from "../utils/types";
 import { getJapscanFromGithub } from "../utils/website";
 import Fetcher from "./Fetcher";
+import { writeFile } from "fs/promises";
 
 /**
  * Japscan downloader class, usually used with an interface
@@ -63,34 +64,43 @@ class Downloader extends Fetcher {
 
     // this is for debug purposes, it will prevent the correct behavior of the downloader
     if (!this.mock && shouldDownload) {
-      const page = await this.createExistingPage(link, "normal");
+      const page = await this.createExistingPage(link);
 
-      const canvasElement = await this.waitForSelector(page, "body > canvas");
+      const canvasElement = await this.waitForSelector(page, "#single-reader > img");
       if (!canvasElement) {
         eventEmitter.emit("noimage", attributes, link);
         return;
       }
-      const dimensions = await canvasElement.evaluate((canvas) => {
-        // remove everything from page except canvas
-        document.querySelectorAll("div").forEach((div) => div.remove());
-        const width = canvas.getAttribute("width");
-        const height = canvas.getAttribute("height");
-        return {
-          width: width ? +width * 2 : 4096,
-          height: height ? +height * 2 : 2160,
-        };
-      });
-      await page.setViewport(dimensions);
-
-      await canvasElement
-        .screenshot({
-          path: savePath,
-        })
-        .catch((e) => console.log("Erreur dans la capture de l'image", e));
+      const images = await page.evaluate(() => Array.from(document.images, e => e.src).filter((image) => image.includes("c.japscan")));
+      await this._downloadImage(images[0], savePath);
       page.close();
     }
 
     eventEmitter.emit("done", attributes, savePath);
+  }
+
+  private async _downloadImage(
+    url: string,
+    filename: string
+  ) {
+    const page = await this.browser.newPage();
+    let viewSource;
+    try {
+      viewSource = await page.goto(url);
+    } catch(e) {
+      throw new Error("Unreachable ressource, " + e);
+    }
+    if (!viewSource) {
+      throw new Error("No viewsource for " + url);
+    }
+    try {
+      await writeFile(filename, await viewSource.buffer());
+      console.log("file", filename, "was succesfully saved");
+    } catch (e) {
+      console.error("error during the download of", filename, ":", e);
+    } finally {
+      page.close();
+    }
   }
 
   async downloadChapterFromLink(

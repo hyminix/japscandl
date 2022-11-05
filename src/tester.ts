@@ -16,13 +16,15 @@ function endTimer() {
   const downloader = await Downloader.launch({
     flags: {
       visible: true,
-      fast: true,
+      fast: false,
     },
   });
-  await downloader.downloadVolume("one-piece", 1, {
-    callback: BasicTextHandler.volumeDownloadCallback,
-  });
-  await downloader.destroy();
+  await downloader.downloadChapterFromLink(
+    "https://www.japscan.me/lecture-en-ligne/one-piece/997/",
+    { callback: BasicTextHandler.chapterDownloadCallback, forceDownload: true }
+  );
+
+  //await downloader.destroy();
   process.on("SIGINT", () => {
     downloader.destroy().then(() => {
       process.exit(1);
