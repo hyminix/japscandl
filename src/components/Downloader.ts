@@ -72,8 +72,9 @@ class Downloader extends Fetcher {
         return;
       }
       const [image] = await page.evaluate(() => Array.from(document.images, e => e.src).filter((image) => image.includes("c.japscan")));
-      await this._downloadImage(image, savePath);
-      await page.close();
+      const download = await this._downloadImage(image, savePath);
+      const closing = page.close();
+      await Promise.all([download, closing]);
     }
 
     eventEmitter.emit("done", attributes, savePath);
