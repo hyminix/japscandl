@@ -66,14 +66,14 @@ class Downloader extends Fetcher {
     if (!this.mock && shouldDownload) {
       const page = await this.createExistingPage(link);
 
-      const canvasElement = await this.waitForSelector(page, "#single-reader > img");
-      if (!canvasElement) {
+      const imageElement = await this.waitForSelector(page, "#single-reader > img");
+      if (!imageElement) {
         eventEmitter.emit("noimage", attributes, link);
         return;
       }
-      const images = await page.evaluate(() => Array.from(document.images, e => e.src).filter((image) => image.includes("c.japscan")));
-      await this._downloadImage(images[0], savePath);
-      page.close();
+      const [image] = await page.evaluate(() => Array.from(document.images, e => e.src).filter((image) => image.includes("c.japscan")));
+      await this._downloadImage(image, savePath);
+      await page.close();
     }
 
     eventEmitter.emit("done", attributes, savePath);
@@ -119,6 +119,7 @@ class Downloader extends Fetcher {
 
     eventEmitter.emit("start", startAttributes, link, numberOfPages);
 
+    console.log("Number of pages for", link, "is", numberOfPages);
     for (let i = 1; i <= numberOfPages; i++) {
       const pageLink = i === 1 ? link : `${link}${i}.html`;
       await this.downloadImageFromLink(pageLink, {
