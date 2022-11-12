@@ -89,7 +89,8 @@ class Component {
       }
       const imageLink = "/c.japscan";
       if (url.includes(imageLink)) {
-        return false;
+        // preventing image from loading
+        return true;
       }
       if (!url.endsWith(".js")) return true;
       // here should validate .js files that are not banned
