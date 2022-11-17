@@ -1,4 +1,3 @@
-import fetch from "node-fetch";
 import path from "path";
 import { Browser, ElementHandle, Page, Response } from "puppeteer";
 import normalScript from "../inject/inject";
@@ -34,25 +33,6 @@ class Component {
     this.outputDirectory = options?.outputDirectory ?? "manga";
     this.timeout = (options?.flags?.timeout ?? 60) * 1000;
     this.fast = options?.flags?.fast ?? false;
-  }
-
-  async checkValidWebsite(website: string): Promise<boolean> {
-    try {
-      let resp = await fetch(website);
-      console.log(website, resp.status);
-      if (resp.status / 100 !== 2) {
-        return false;
-      }
-      resp = await fetch(website + "/live-search", { method: "POST" });
-      console.log(website, resp.status);
-      if (resp.status / 100 !== 2) {
-        return false;
-      }
-    } catch (e) {
-      return false;
-    }
-
-    return true;
   }
 
   /** if page exists, go to it, else throw error
@@ -142,7 +122,13 @@ class Component {
     if (script) await this._injectScriptToPage(page, script);
     const response = await this._safePageGoto(page, link);
     if (await this._isJapscan404(response)) {
-      throw new Error("La page " + link + " n'existe pas (404)");
+      throw new Error("Page " + link + " doesn't exist (404)");
+    }
+    if(await this.isLostPage(page)) {
+      throw new Error("You're lost! Invalid link format or unknown manga/chapter");
+    }
+    if(page.url().endsWith("/mangas/")){
+      throw new Error("Invalid manga name");
     }
   }
 
@@ -152,6 +138,10 @@ class Component {
     } catch (e) {
       return this._safePageGoto(page, link);
     }
+  }
+
+  async isLostPage(page: Page): Promise<boolean> {
+    return !!(await page.evaluate(() => document.querySelector('img')?.src.endsWith("lost.gif")));
   }
 
   /**

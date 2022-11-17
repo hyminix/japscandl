@@ -12,21 +12,32 @@ export function componentTests(): void {
 
   describe("japscan 404 tests", function () {
     this.timeout(0);
-    it("Should throw because page is 404", function () {
-      return new Promise((resolve, reject) => {
-        component
-          .createExistingPage(WEBSITE + "/manga/one-piece")
-          .then((page) => page.close())
-          .catch((error) => reject(error));
-        resolve(undefined);
+    const invalidLinks = [WEBSITE + "/manga/one-piece", WEBSITE + "/manga/na/"];
+    invalidLinks.forEach((link) => {
+      it("Invalid links are 404: " + link.replace(WEBSITE, ""), function () {
+        return new Promise<void>((resolve, reject) => {
+          component
+            .createExistingPage(link)
+            .then((page) => {
+              page.close();
+              reject(new Error(page.url()));
+            })
+            .catch(() => resolve());
+        });
       });
     });
-    it("Should not throw because page exists", function () {
-      return new Promise((resolve, reject) => {
-        component
-          .createExistingPage(WEBSITE + "/manga/one-piece/")
+    const validLinks = [
+      WEBSITE + "/manga/one-piece/",
+      WEBSITE + "/manga/naruto/",
+      WEBSITE + "/lecture-en-ligne/one-piece/1067/",
+    ];
+    validLinks.forEach((link) => {
+      it("Should not throw because page exists: " + link.replace(WEBSITE, ""), function () {
+        return new Promise<void>((resolve, reject) => {
+          component.createExistingPage(link)
+          .then(() => resolve())
           .catch((error) => reject(error));
-        resolve(undefined);
+        });
       });
     });
   });
@@ -74,45 +85,6 @@ export function componentTests(): void {
           });
         }
       );
-    });
-  });
-  describe.skip("Is a website tests", function () {
-    this.timeout(0);
-    function assertWebsite(
-      website: string,
-      expectedResult: boolean
-    ): Promise<void> {
-      return new Promise<void>((resolve, reject) => {
-        component.checkValidWebsite(website).then((res) => {
-          console.log(res, expectedResult);
-          if (res !== expectedResult) {
-            reject(
-              new Error(
-                `${website} should ${expectedResult ? "" : "not"} be valid`
-              )
-            );
-          }
-          resolve();
-        });
-      });
-    }
-    it("Check valid website", function () {
-      return assertWebsite("https://japscan.me", true);
-    });
-    it("Check invalid website", function () {
-      return assertWebsite("japscan.me", false);
-    });
-    it("Check invalid website", function () {
-      return assertWebsite("https://japscan", false);
-    });
-    it("Check invalid website", function () {
-      return assertWebsite("https://japscan.ws", true);
-    });
-    it("Check invalid website", function () {
-      return assertWebsite("https://japscan.se", true);
-    });
-    it("Check invalid website", function () {
-      return assertWebsite("https://japscan.co", true);
     });
   });
 }

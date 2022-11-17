@@ -9,19 +9,22 @@ const flags = yargs(process.argv.slice(2)).option("only", {
   choices: ["c", "component", "f", "fetcher", "d", "downloader"],
 }).argv;
 
-const choices = {
+const availableTests = {
     "c": componentTests,
     "f": fetcherTests,
     "d": downloaderTests
 }
 
 if(flags.only){
-    const choice = flags.only[0] as keyof typeof choices;
-    choices[choice]();
+    // get first letter of choice ("downloader" -> "d" | "d" -> "d") which is a key to choices
+    const choice = flags.only[0] as keyof typeof availableTests;
+    // execute test
+    availableTests[choice]();
 } else {
-    componentTests();
-    fetcherTests();
-    downloaderTests();
+    // execute each test in choices
+    for(const test of Object.values(availableTests)){
+        test();
+    }
 }
 
 
