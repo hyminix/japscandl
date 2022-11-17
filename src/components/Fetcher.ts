@@ -65,9 +65,9 @@ class Fetcher extends Component {
     if (!volume) {
       throw new Error(
         "japdl n'a pas pu trouver le volume " +
-          volumeNumber +
-          " du manga " +
-          mangaName
+        volumeNumber +
+        " du manga " +
+        mangaName
       );
     }
     return volume.chapters.map((chapter) => chapter.link);
@@ -104,10 +104,10 @@ class Fetcher extends Component {
     if (end < start) {
       throw new Error(
         "Le début ne peut pas être plus grand que la fin (début: " +
-          start +
-          ", fin: " +
-          end +
-          ")"
+        start +
+        ", fin: " +
+        end +
+        ")"
       );
     }
     const data = await this.fetchMangaContent(mangaName);
@@ -143,6 +143,39 @@ class Fetcher extends Component {
     );
     await startPage.close();
     return numberOfPages;
+  }
+
+  async getImagesOnPage(page: Page): Promise<string[]> {
+    const images =
+      await page
+        .evaluate(() => Array.from(document.images, e => e.src)
+          .filter((image) => image.includes("c.japscan")));
+    return images;
+  }
+
+  /**
+ *
+ * @param link to fetch from
+ * @returns number of pages in chapter
+ */
+  async fetchNumberOfPagesInChapterWithPage(page: Page): Promise<number> {
+    const chapterSelectSelector =
+      "#pages";
+    const chapterSelect = await this.waitForSelector(
+      page,
+      chapterSelectSelector
+    );
+    if (!chapterSelect) {
+      throw new Error("Couldn't find element for pages");
+    }
+    const numberOfPages = await chapterSelect.evaluate(
+      (el) => el.childElementCount
+    );
+    return numberOfPages;
+  }
+
+  async isPageMultiImages(page: Page) {
+
   }
 
   /**
@@ -262,8 +295,8 @@ class Fetcher extends Component {
           const volumeNumber = volumeAt.textContent?.trim().includes("Webtoon")
             ? "Webtoon"
             : splitted
-            ? parseFloat(splitted[1]?.trim()).toString()
-            : "notFound";
+              ? parseFloat(splitted[1]?.trim()).toString()
+              : "notFound";
           const volume = {
             name: volumeAt.textContent?.trim() as string,
             number: volumeNumber,

@@ -55,9 +55,7 @@ class Downloader extends Fetcher {
     const attributes = MangaAttributes.fromLink(link);
     eventEmitter.emit("start", attributes, link);
 
-    let savePath = attributes.getFolderPath(this.outputDirectory);
-    fsplus.createPath(savePath);
-    savePath = attributes.getImagePath(this.outputDirectory, this.imageFormat);
+    let savePath = fsplus.prepareImagePath(attributes, this.outputDirectory, this.imageFormat);
 
     const shouldDownload =
       forceDownload || !fsplus.alreadyDownloadedImage(savePath);
@@ -71,7 +69,8 @@ class Downloader extends Fetcher {
         eventEmitter.emit("noimage", attributes, link);
         return;
       }
-      const [image] = await page.evaluate(() => Array.from(document.images, e => e.src).filter((image) => image.includes("c.japscan")));
+      // get first
+      const [image] = await this.getImagesOnPage(page);
       const download = await this._downloadImage(image, savePath);
       const closing = page.close();
       await Promise.all([download, closing]);
@@ -88,7 +87,7 @@ class Downloader extends Fetcher {
     let viewSource;
     try {
       viewSource = await page.goto(url);
-    } catch(e) {
+    } catch (e) {
       throw new Error("Unreachable ressource, " + e);
     }
     if (!viewSource) {
@@ -115,25 +114,39 @@ class Downloader extends Fetcher {
   ): Promise<void> {
     const eventEmitter = new ChapterDownloadEmit(options?.callback);
     const startAttributes = MangaAttributes.fromLink(link);
-    const numberOfPages = await this.fetchNumberOfPagesInChapter(link);
+    const page = await this.createExistingPage(link);
     const downloadPath = startAttributes.getFolderPath(this.outputDirectory);
+
+    const numberOfPages = await this.fetchNumberOfPagesInChapterWithPage(page);
+    console.log("Number of pages for", link, "is", numberOfPages);
 
     eventEmitter.emit("start", startAttributes, link, numberOfPages);
 
-    console.log("Number of pages for", link, "is", numberOfPages);
-    for (let i = 1; i <= numberOfPages; i++) {
-      const pageLink = i === 1 ? link : `${link}${i}.html`;
-      await this.downloadImageFromLink(pageLink, {
-        forceDownload: options?.forceDownload,
-        callback: (events) => {
-          events.on("noimage", (attributes, link) => {
-            eventEmitter.emit("noimage", attributes, link);
-          });
-          events.on("done", (attributes, path) => {
-            eventEmitter.emit("page", attributes, numberOfPages, path);
-          });
-        },
-      });
+    const imagesOnPage = await this.getImagesOnPage(page);
+    await page.close();
+    if (imagesOnPage.length > 1) {
+      // webtoon mode
+      for (let [index, imageLink] of imagesOnPage.entries()) {
+        index += 1;
+        startAttributes.page = index.toString();
+        let savePath = fsplus.prepareImagePath(startAttributes, this.outputDirectory, this.imageFormat);
+        await this._downloadImage(imageLink, savePath);
+      };
+    } else {
+      for (let i = 1; i <= numberOfPages; i++) {
+        const pageLink = i === 1 ? link : `${link}${i}.html`;
+        await this.downloadImageFromLink(pageLink, {
+          forceDownload: options?.forceDownload,
+          callback: (events) => {
+            events.on("noimage", (attributes, link) => {
+              eventEmitter.emit("noimage", attributes, link);
+            });
+            events.on("done", (attributes, path) => {
+              eventEmitter.emit("page", attributes, numberOfPages, path);
+            });
+          },
+        });
+      }
     }
     if (options?.compression) {
       eventEmitter.emit("compressing", startAttributes, downloadPath);

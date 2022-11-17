@@ -1,4 +1,5 @@
 import { existsSync, mkdirSync, readdirSync, rmSync, lstatSync } from "fs";
+import MangaAttributes from "../MangaAttributes";
 
 const fsplus = {
   tellIfDoesntExist(locations: string[]): boolean {
@@ -47,6 +48,12 @@ const fsplus = {
       rmSync(path, { force: true, recursive: true })
     );
   },
+  prepareImagePath(attributes: MangaAttributes, outputDirectory: string, imageFormat: "jpg" | "png") {
+    let savePath = attributes.getFolderPath(outputDirectory);
+    fsplus.createPath(savePath);
+    savePath = attributes.getImagePath(outputDirectory, imageFormat);
+    return savePath;
+  }
 };
 
 export default fsplus;
