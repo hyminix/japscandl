@@ -33,7 +33,9 @@ function endTimer(what?: string) {
 
   const manga =  new MangaAttributes("kaguya-sama-wa-kokurasetai-tensai-tachi-no-renai-zunousen", 89);
 
-  await downloader.downloadChapterFromLink(manga.getLectureLink(), {callback: BasicTextHandler.chapterDownloadCallback, compression: true, deleteAfterCompression: true});
+  await downloader.downloadChapterFromLink(manga.getLectureLink(), {callback: (events) => {
+    events.on("page" , (attributes) => console.log("page downloaded", attributes));
+  }, compression: true, deleteAfterCompression: true});
 
   endTimer("Task");
 

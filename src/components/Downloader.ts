@@ -95,7 +95,6 @@ class Downloader extends Fetcher {
     }
     try {
       await writeFile(filename, await viewSource.buffer());
-      console.log("file", filename, "was succesfully saved");
     } catch (e) {
       console.error("error during the download of", filename, ":", e);
     } finally {
