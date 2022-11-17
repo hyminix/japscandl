@@ -55,7 +55,7 @@ class Downloader extends Fetcher {
     const attributes = MangaAttributes.fromLink(link);
     eventEmitter.emit("start", attributes, link);
 
-    let savePath = fsplus.prepareImagePath(attributes, this.outputDirectory, this.imageFormat);
+    const savePath = fsplus.prepareImagePath(attributes, this.outputDirectory, this.imageFormat);
 
     const shouldDownload =
       forceDownload || !fsplus.alreadyDownloadedImage(savePath);
@@ -126,13 +126,12 @@ class Downloader extends Fetcher {
 
     if (imagesOnPage.length > 1) {
       // webtoon mode
-      for (let [index, imageLink] of imagesOnPage.entries()) {
-        index += 1;
-        startAttributes.page = index.toString();
-        let savePath = fsplus.prepareImagePath(startAttributes, this.outputDirectory, this.imageFormat);
+      for (const [index, imageLink] of imagesOnPage.entries()) {
+        startAttributes.page = (index+1).toString();
+        const savePath = fsplus.prepareImagePath(startAttributes, this.outputDirectory, this.imageFormat);
         await this._downloadImage(imageLink, savePath);
         eventEmitter.emit("page", startAttributes, numberOfPages, savePath);
-      };
+      }
     } else {
       // normal mode
       for (let i = 1; i <= numberOfPages; i++) {
