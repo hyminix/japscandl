@@ -132,6 +132,7 @@ class Downloader extends Fetcher {
         startAttributes.page = index.toString();
         let savePath = fsplus.prepareImagePath(startAttributes, this.outputDirectory, this.imageFormat);
         await this._downloadImage(imageLink, savePath);
+        eventEmitter.emit("page", startAttributes, numberOfPages, savePath);
       };
     } else {
       // normal mode
