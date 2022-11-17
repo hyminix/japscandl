@@ -12,7 +12,7 @@
     "clean:manga": "rm -rf manga",
     "start": "npm run tsc && node .",
     "build": "npm run tsc && pkg .",
-    "test": "npm run clean:manga && npm run tsc && mocha js/test/ --recursive --exit",
+    "test": "npm run clean:manga && npm run tsc && mocha js/test/ --exit",
     "tsc": "npm run clean:js && tsc",
     "download": "npm run tsc && node js/src/utils/chromiumDownloader.js",
     "downloadtest": "npm run tsc && node js/src/utils/chromiumDownloader.js --testing",
