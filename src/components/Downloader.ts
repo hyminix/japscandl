@@ -124,6 +124,7 @@ class Downloader extends Fetcher {
 
     const imagesOnPage = await this.getImagesOnPage(page);
     await page.close();
+
     if (imagesOnPage.length > 1) {
       // webtoon mode
       for (let [index, imageLink] of imagesOnPage.entries()) {
@@ -133,6 +134,7 @@ class Downloader extends Fetcher {
         await this._downloadImage(imageLink, savePath);
       };
     } else {
+      // normal mode
       for (let i = 1; i <= numberOfPages; i++) {
         const pageLink = i === 1 ? link : `${link}${i}.html`;
         await this.downloadImageFromLink(pageLink, {
