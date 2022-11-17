@@ -8,15 +8,13 @@
     "url": "https://github.com/Seysa/japscandl"
   },
   "scripts": {
-    "clean:js": "rm -rf js",
     "clean:manga": "rm -rf manga",
-    "start": "npm run tsc && node .",
-    "build": "npm run tsc && pkg .",
-    "test": "npm run clean:manga && npm run tsc && mocha js/test/ --exit",
+    "clean:js": "rm -rf js",
     "tsc": "npm run clean:js && tsc",
+    "start": "npm run tsc && node js/src/tester.js",
+    "test": "npm run clean:manga && npm run tsc && mocha js/test/ --exit",
     "download": "npm run tsc && node js/src/utils/chromiumDownloader.js",
     "downloadtest": "npm run tsc && node js/src/utils/chromiumDownloader.js --testing",
-    "tester": "npm run tsc && node js/src/tester.js",
     "pub": "npm run tsc && git push && npm publish"
   },
   "bin": "js/index.js",
@@ -42,12 +40,9 @@
     "@types/yargs": "^16.0.1",
     "@typescript-eslint/eslint-plugin": "^4.22.0",
     "@typescript-eslint/parser": "^4.22.0",
-    "chai": "^4.3.4",
     "eslint": "^7.24.0",
     "image-size": "^1.0.0",
     "mocha": "^8.3.2",
-    "pkg": "^5.0.0",
-    "ts-node": "^9.1.1",
     "typescript": "^4.2.4"
   }
 }
