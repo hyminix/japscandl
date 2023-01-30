@@ -459,7 +459,15 @@ class Downloader extends Fetcher {
       options = Object.assign(options ?? {}, { website: currentWebsite });
       console.log("Now is", options);
     }
-    return new this(browser, options);
+
+  // this should open japscan url once to bypass cloudfare detection
+  const instance = new this(browser, options);
+  const page = await instance.browser.newPage();
+  instance._goToExistingPage(page, instance.website);
+  await page.waitForNavigation({waitUntil: "networkidle0"});
+  await page.close();
+
+  return instance;
   }
 
   /**
