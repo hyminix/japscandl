@@ -66,7 +66,7 @@ const getBrowser = async (
     const puppeteer = addExtra(puppeteerVanilla);
     puppeteer.use(AdblockerPlugin());
     const browser = await puppeteer.launch({
-      headless: !visible,
+      headless: false,
       executablePath: chromePath,
       defaultViewport: null,
     });
