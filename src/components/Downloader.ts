@@ -479,12 +479,14 @@ class Downloader extends Fetcher {
   return instance;
   }
 
-  static async getInstance(): Promise<Downloader> {
+  static async getInstance(chromePath?: string): Promise<Downloader> {
      // eslint-disable-next-line @typescript-eslint/no-var-requires
     const chromeLauncher = require('chrome-launcher');
 
     // Initializing a Chrome instance manually
-    const chrome = await chromeLauncher.launch();
+    const chrome = await chromeLauncher.launch({
+      chromePath
+    });
     const response = await axios.get(`http://localhost:${chrome.port}/json/version`);
     const { webSocketDebuggerUrl } = response.data;
 
