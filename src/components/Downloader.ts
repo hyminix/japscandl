@@ -489,7 +489,8 @@ class Downloader extends Fetcher {
 
     // Initializing a Chrome instance manually
     const chrome = await chromeLauncher.launch({
-      chromePath: options?.chromePath
+      chromePath: options?.chromePath,
+      chromeFlags: ["--disable-gpu"]
     });
     const response = await axios.get(`http://localhost:${chrome.port}/json/version`);
     const { webSocketDebuggerUrl } = response.data;

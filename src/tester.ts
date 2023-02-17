@@ -27,7 +27,7 @@ function endTimer(what?: string) {
   endTimer("init");
 
   startTimer();
-  await downloader.downloadChapter("one-piece", 1000, {callback: BasicTextHandler.chapterDownloadCallback});
+  await downloader.downloadChapter("one-piece", 1000, {forceDownload: true, callback: BasicTextHandler.chapterDownloadCallback});
   endTimer("download");
 })();
 

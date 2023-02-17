@@ -1,1 +1,1 @@
-export const WEBSITE = "https://www.japscan.me";
+export const WEBSITE = "https://www.japscan.lol";
