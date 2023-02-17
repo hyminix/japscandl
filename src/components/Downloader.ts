@@ -117,10 +117,11 @@ class Downloader extends Fetcher {
     const eventEmitter = new ChapterDownloadEmit(options?.callback);
     const startAttributes = MangaAttributes.fromLink(link);
     const page = await this.createExistingPage(link);
-    await page.waitForNavigation({
-      waitUntil: 'networkidle0',
-    });
-    console.log("DONE LOADING");
+    try {
+      await page.waitForSelector("#single-reader");
+    } catch(e) {
+      //ignore and continue, probably worked
+    }
     const downloadPath = startAttributes.getFolderPath(this.outputDirectory);
 
     const numberOfPages = await this.fetchNumberOfPagesInChapterWithPage(page);
@@ -479,23 +480,25 @@ class Downloader extends Fetcher {
   return instance;
   }
 
-  static async getInstance(chromePath?: string): Promise<Downloader> {
+
+  static async getInstance(
+    options?: DownloaderOptions & { chromePath?: string }
+    ): Promise<Downloader> {
      // eslint-disable-next-line @typescript-eslint/no-var-requires
     const chromeLauncher = require('chrome-launcher');
 
     // Initializing a Chrome instance manually
     const chrome = await chromeLauncher.launch({
-      chromePath
+      chromePath: options?.chromePath
     });
     const response = await axios.get(`http://localhost:${chrome.port}/json/version`);
     const { webSocketDebuggerUrl } = response.data;
 
     // Connecting the instance using `browserWSEndpoint`
     const browser = await puppeteer.connect({ browserWSEndpoint: webSocketDebuggerUrl });
-    console.info(browser);
 
     // @ts-ignore
-    const downloader = new Downloader(browser);
+    const downloader = new Downloader(browser, options);
     downloader.website = await getJapscanFromGithub();
     downloader.chrome = chrome;
     return downloader;
