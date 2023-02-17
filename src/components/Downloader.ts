@@ -17,11 +17,14 @@ import { DownloaderOptions } from "../utils/types";
 import { getJapscanFromGithub } from "../utils/website";
 import Fetcher from "./Fetcher";
 import { writeFile } from "fs/promises";
+import axios from "axios";
+import puppeteer from "puppeteer-core";
 
 /**
  * Japscan downloader class, usually used with an interface
  */
 class Downloader extends Fetcher {
+  chrome?: any;
   imageFormat: "jpg" | "png";
   mock: boolean;
 
@@ -114,6 +117,10 @@ class Downloader extends Fetcher {
     const eventEmitter = new ChapterDownloadEmit(options?.callback);
     const startAttributes = MangaAttributes.fromLink(link);
     const page = await this.createExistingPage(link);
+    await page.waitForNavigation({
+      waitUntil: 'networkidle0',
+    });
+    console.log("DONE LOADING");
     const downloadPath = startAttributes.getFolderPath(this.outputDirectory);
 
     const numberOfPages = await this.fetchNumberOfPagesInChapterWithPage(page);
@@ -125,6 +132,8 @@ class Downloader extends Fetcher {
     await page.close();
 
     if (imagesOnPage.length > 1) {
+
+      console.log("Getting images on pages", imagesOnPage.length);
       // webtoon mode
       for (const [index, imageLink] of imagesOnPage.entries()) {
         startAttributes.page = (index+1).toString();
@@ -470,11 +479,32 @@ class Downloader extends Fetcher {
   return instance;
   }
 
+  static async getInstance(): Promise<Downloader> {
+     // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const chromeLauncher = require('chrome-launcher');
+
+    // Initializing a Chrome instance manually
+    const chrome = await chromeLauncher.launch();
+    const response = await axios.get(`http://localhost:${chrome.port}/json/version`);
+    const { webSocketDebuggerUrl } = response.data;
+
+    // Connecting the instance using `browserWSEndpoint`
+    const browser = await puppeteer.connect({ browserWSEndpoint: webSocketDebuggerUrl });
+    console.info(browser);
+
+    // @ts-ignore
+    const downloader = new Downloader(browser);
+    downloader.website = await getJapscanFromGithub();
+    downloader.chrome = chrome;
+    return downloader;
+  }
+
   /**
    * destroy browser, do not use downloader after this operation
    */
   async destroy(): Promise<void> {
     if (this.browser) await this.browser.close();
+    if(this.chrome) this.chrome.kill();
   }
 }
 

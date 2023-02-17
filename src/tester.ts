@@ -1,6 +1,8 @@
-import BasicTextHandler from "./components/BasicTextHandler";
+import axios from "axios";
+import puppeteer from "puppeteer-core";
 import Downloader from "./components/Downloader";
-import MangaAttributes from "./MangaAttributes";
+import BasicTextHandler from "./components/BasicTextHandler";
+import {getJapscanFromGithub} from "./utils/website";
 
 let start: Date = new Date();
 
@@ -19,25 +21,13 @@ function endTimer(what?: string) {
 
 (async () => {
   startTimer();
-  const downloader = await Downloader.launch({
-    flags: {
-      visible: true,
-      fast: true,
-    },
-  });
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const downloader = await Downloader.getInstance();
 
-
-  endTimer("Init");
+  endTimer("init");
 
   startTimer();
-
-  const manga =  new MangaAttributes("kaguya-sama-wa-kokurasetai-tensai-tachi-no-renai-zunousen", 89);
-
-  await downloader.downloadChapterFromLink(manga.getLectureLink(), {callback: (events) => {
-    events.on("page" , (attributes) => console.log("page downloaded", attributes));
-  }, compression: true, deleteAfterCompression: true});
-
-  endTimer("Task");
-
-  await downloader.destroy();
+  await downloader.downloadChapter("one-piece", 1000, {callback: BasicTextHandler.chapterDownloadCallback});
+  endTimer("download");
 })();
+
