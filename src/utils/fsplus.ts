@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, readdirSync, rmSync, lstatSync } from "fs";
+import { existsSync, mkdirSync, readdirSync, rmSync, lstatSync, writeFileSync } from "fs";
 import MangaAttributes from "../MangaAttributes";
 
 const fsplus = {
@@ -48,11 +48,18 @@ const fsplus = {
       rmSync(path, { force: true, recursive: true })
     );
   },
-  prepareImagePath(attributes: MangaAttributes, outputDirectory: string, imageFormat: "jpg" | "png") {
+  prepareImagePath(attributes: MangaAttributes, outputDirectory: string, imageFormat: "jpg" | "png"): string {
     let savePath = attributes.getFolderPath(outputDirectory);
     fsplus.createPath(savePath);
     savePath = attributes.getImagePath(outputDirectory, imageFormat);
     return savePath;
+  },
+  saveBase64AsFile(filename: string, base64: string): void {
+    try {
+      writeFileSync(filename, base64, {encoding: 'base64'});
+    } catch(e) {
+      console.error(e);
+    }
   }
 };
 

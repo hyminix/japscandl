@@ -73,10 +73,39 @@ class Downloader extends Fetcher {
         return;
       }
       // get first
+      /*
       const [image] = await this.getImagesOnPage(page);
       const download = await this._downloadImage(image, savePath);
-      const closing = page.close();
-      await Promise.all([download, closing]);
+      */
+
+      const imagesData = await imageElement.evaluate((el) => {
+        const imageEl = el as HTMLImageElement;
+        const canvas = document.createElement('canvas');
+        canvas.width = imageEl.naturalWidth;
+        canvas.height = imageEl.naturalHeight;
+        const context = canvas.getContext('2d');
+        if(!context) return null;
+        context.drawImage(imageEl, 0, 0);
+        return canvas.toDataURL('image/png');
+      });
+
+      if(!imagesData){
+        console.log("error");
+        return;
+      }
+
+
+      const base64Image = imagesData.split(';base64,').pop();
+      if(!base64Image) {
+        return;
+      }
+    // write to file
+    fsplus.saveBase64AsFile(savePath, base64Image);
+
+      //console.log(imagesData);
+
+
+      await page.close();
     }
 
     eventEmitter.emit("done", attributes, savePath);
@@ -490,7 +519,7 @@ class Downloader extends Fetcher {
     // Initializing a Chrome instance manually
     const chrome = await chromeLauncher.launch({
       chromePath: options?.chromePath,
-      chromeFlags: ["--disable-gpu"]
+      chromeFlags: ["--disable-gpu", "--disable-web-security"]
     });
     const response = await axios.get(`http://localhost:${chrome.port}/json/version`);
     const { webSocketDebuggerUrl } = response.data;
