@@ -262,7 +262,7 @@ class Fetcher extends Component {
         });
         ResultVolumes.push({
           name: "Volume 1",
-          chapters: chaptersResult,
+          chapters: chaptersResult.reverse(),
           number: "1",
         });
         return ResultVolumes;
