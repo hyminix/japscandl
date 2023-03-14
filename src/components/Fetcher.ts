@@ -251,6 +251,22 @@ class Fetcher extends Component {
       const ResultVolumes: Volume[] = [];
       const volumes = chaptersListEl.querySelectorAll("h4");
       const chapters = chaptersListEl.querySelectorAll(".collapse");
+      if(!volumes.length) {
+        const chaptersResult: { name: string; link: string }[] = [];
+        const aEls = chapters.item(0).querySelectorAll("div > a");
+        aEls.forEach((el) => {
+          chaptersResult.push({
+            name: el.textContent?.trim() as string,
+            link: (<HTMLAnchorElement>el).href?.trim(),
+          });
+        });
+        ResultVolumes.push({
+          name: "Volume 1",
+          chapters: chaptersResult,
+          number: "1",
+        });
+        return ResultVolumes;
+      }
       const isAVolumeMissing =
         volumes[0].compareDocumentPosition(chapters[0]) &
         Node.DOCUMENT_POSITION_PRECEDING;
@@ -308,9 +324,15 @@ class Fetcher extends Component {
       return ResultVolumes.reverse();
     });
 
-    const synopsis = await page.$eval("p.list-group-item", (el) => {
-      return el.textContent || "";
-    });
+    let synopsis = "";
+
+    try {
+      synopsis = await page.$eval("p.list-group-item", (el) => {
+        return el.textContent || "";
+      });
+    } catch (e) {
+      // do nothing
+    }
 
     const displayName = await page.$eval(
       "div.card-body:nth-child(1) > h1:nth-child(1)",

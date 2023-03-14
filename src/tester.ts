@@ -27,7 +27,13 @@ function endTimer(what?: string) {
   endTimer("init");
 
   startTimer();
-  await downloader.downloadChapter("one-piece", 1000, {forceDownload: true, callback: BasicTextHandler.chapterDownloadCallback});
+  try {
+    const manga = await downloader.fetchMangaContent("fire-emblem-engage");
+    console.log(manga);
+    console.log(JSON.stringify(manga, null, 2));
+  } catch (e) {
+    console.error(e);
+  }
   endTimer("download");
 })();
 
